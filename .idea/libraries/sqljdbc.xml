@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sqljdbc">
+    <CLASSES>
+      <root url="jar://D:/Program_files/MS_JDBC_Drivers/sqljdbc_4.0/enu/sqljdbc4.jar!/" />
+      <root url="jar://D:/Program_files/MS_JDBC_Drivers/sqljdbc_4.0/enu/sqljdbc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://D:/Program_files/MS_JDBC_Drivers/sqljdbc_4.0/enu/sqljdbc4.jar!/" />
+    </SOURCES>
+  </library>
+</component>
