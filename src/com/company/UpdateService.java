@@ -1,17 +1,23 @@
 package com.company;
 
 import com.company.data.Address;
+import com.company.data.KeyValue;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -170,6 +176,85 @@ public class UpdateService {
             Utils.closeQuietly(ps);
             Utils.closeQuietly(connection);
         }
+    }
+
+    public static ArrayList<KeyValue> readFromExcel(String path, String tableName, String targetColumnName) {
+        ArrayList<KeyValue> result = new ArrayList<KeyValue>();
+        /*
+         HSSFRow row = sheet.getRow(0);
+         int id = (int)row.getCell(0).getNumericCellValue();
+            String name = row.getCell(1).getStringCellValue();
+            int regionid = (int)row.getCell(2).getNumericCellValue();
+            Address address = new Address(id, name, regionid);
+
+            result.add(address);
+        * */
+
+        try {
+            HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(path));
+            HSSFSheet sheet = myExcelBook.getSheetAt(0);
+
+            System.out.println("FirstRow=" + sheet.getFirstRowNum() + ", LastRow=" + sheet.getLastRowNum() + ", PhysicalNumber=" + sheet.getPhysicalNumberOfRows());
+            int x = 0; //x - current column
+//            int row = 0;
+            int idX = -1; //idX
+            int res = -1; //res - target name of column
+            HSSFRow row = sheet.getRow(0);
+
+            int lastX = row.getLastCellNum(); //last column
+            System.out.println("LastX=" + lastX);
+
+
+            for (; x < lastX; x++) {
+                System.out.println("x="+x);
+                HSSFCell cell = row.getCell(x);
+
+                if (cell == null) throw new RuntimeException("Empty header at index " + x);
+
+                String currentCellValue = cell.getStringCellValue(); //current value of cell
+                if ("id".equalsIgnoreCase(currentCellValue)) {
+                    if (idX > -1) {
+                        throw new RuntimeException("Two ID columns");
+                    } else {
+                        idX = x;
+                    }
+                }
+                if (targetColumnName.equalsIgnoreCase(currentCellValue)) {
+                    if (res>-1) {
+                        throw new RuntimeException("Two target columns");
+                    }
+                    else {
+                        res = x;
+                    }
+                }
+            }
+            if (idX == -1 && res == -1) {
+                throw new RuntimeException("Id column or target not found. idx=" + idX + ", res=" + res);
+            }
+            int lastrow = sheet.getLastRowNum();
+            int y = 1; //index of row
+
+            for (; y<=lastrow; y++) {
+                row = sheet.getRow(y);
+                if (row == null) continue;//skip empty row
+
+                HSSFCell cellId = row.getCell(idX);
+                HSSFCell cellRes = row.getCell(res);
+
+                if (cellId !=null && cellId.getNumericCellValue() > 0) {
+                    String value = cellRes != null ? cellRes.getStringCellValue() : null;
+                    KeyValue kv = new KeyValue((int)(cellId.getNumericCellValue()), value);
+                    result.add(kv);
+                } else if (cellRes!=null && cellRes.getStringCellValue()== null){
+                    throw new RuntimeException("Row with index #" + y  + " is empty");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }
 

@@ -1,8 +1,10 @@
 package com.company;
 
 import com.company.data.Address;
+import com.company.data.KeyValue;
 import org.junit.Test;
 
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +73,18 @@ public class UtilServiceTest {
         UpdateService.updateTable(tempTableName, data );
     }
 
+    @Test
+    public void readDataFromFile() {
+        ArrayList<KeyValue> expected = new ArrayList<>();
+        expected.add(new KeyValue(1, "Nevskiy prospect, 1"));
+        expected.add(new KeyValue(2, "Lenina st, 2"));
+        expected.add(new KeyValue(3, "Moskovskaya, 17 "));
+        expected.add(new KeyValue(2, "Lenina st, 3"));
 
-
+        String tableName = "address";
+        String path = "C:\\tmp\\temp.xls";
+        String targetColumnName = "address";
+        ArrayList<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumnName);
+        assertEquals(expected, actual);
+    }
 }
