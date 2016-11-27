@@ -11,6 +11,7 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -85,7 +86,7 @@ public class UtilServiceTest {
         expected.add(new StringKeyValue(2, "Lenina st, 3"));
 
         String tableName = "address";
-        String path = "C:\\tmp\\temp.xls";
+        String path = "test/resources/address.xls";
         Column targetColumn = new Column("address", "varchar", DataType.VARCHAR, false, 50);
         List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
         assertEquals(expected, actual);
@@ -100,7 +101,7 @@ public class UtilServiceTest {
         expected.add(new FloatKeyValue(2, 1d));
 
         String tableName = "address";
-        String path = "C:\\tmp\\temp.xls";
+        String path = "test/resources/address.xls";
         Column targetColumn = new Column("regionid", "int", DataType.FLOAT, true,0);
         List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
         assertEquals(expected, actual);
