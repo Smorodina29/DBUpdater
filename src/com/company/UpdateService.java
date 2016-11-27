@@ -1,9 +1,6 @@
 package com.company;
 
-import com.company.data.Address;
-import com.company.data.FloatKeyValue;
-import com.company.data.KeyValue;
-import com.company.data.StringKeyValue;
+import com.company.data.*;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -14,8 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -264,12 +259,13 @@ public class UpdateService {
         return result;
     }
 
-    private static KeyValue getCellValue(int id, HSSFCell cell, Column column, int x, int y) {
-        if (cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+    private static KeyValue getCellValue(int key, HSSFCell cell, Column column, int x, int y) {
+        boolean isEmptyCell = cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK;
+        if (isEmptyCell) {
             if (!column.isNullable) {
                 throw new RuntimeException("Cell[" + x + ", " + y + "] is not nullable.");
             }
-            return createEmptyKeyValue(id, column);
+            return createEmptyKeyValue(key, column);
         }
 
         int cellType = cell.getCellType();
@@ -278,15 +274,30 @@ public class UpdateService {
         }
 
         KeyValue result;
-        switch (cellType) {
-            case Cell.CELL_TYPE_STRING:
-                result = new StringKeyValue(id, cell.getStringCellValue());
+        switch (column.dataType) {
+            case VARCHAR:
+                result = new StringKeyValue(key, cell.getStringCellValue());
                 break;
-            case Cell.CELL_TYPE_NUMERIC:
-                result = new FloatKeyValue(id, cell.getNumericCellValue());
+            case FLOAT:
+                result = new FloatKeyValue(key, cell.getNumericCellValue());
+                break;
+            case DATETIME:
+                result = new DateKeyValue(key, cell.getDateCellValue());
+                break;
+            case BOOLEAN:
+                String strBool = cell.getStringCellValue();
+                boolean value;
+                if ("true".equalsIgnoreCase(strBool)){
+                    value = true;
+                } else if ("false".equalsIgnoreCase(strBool)) {
+                    value = false;
+                } else {
+                    throw new RuntimeException("Cell[" + x + ", " + y + "] is not correct boolean value=`" + strBool + "\'");
+                }
+                result = new BooleanKeyValue(key, value);
                 break;
             default:
-                throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
+                throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to expected(" + column.dataType + ")");
         }
 
         return result;
@@ -301,6 +312,12 @@ public class UpdateService {
             case VARCHAR:
                 result = new StringKeyValue(id, null);
                 break;
+            case BOOLEAN:
+                result = new BooleanKeyValue(id, null);
+                break;
+            case DATETIME:
+                result = new DateKeyValue(id, null);
+                break;
             default:
                 throw new RuntimeException("Unsupported type `" + column + "'!");
         }
@@ -308,7 +325,7 @@ public class UpdateService {
     }
 
     private static boolean correctType(int cellType, DataType dataType) {
-        return Utils.dataTypesPairs.contains(new Pair<>(cellType, dataType));
+        return Utils.allowedDataTypesPairs.contains(new Pair<>(cellType, dataType));
     }
 }
 

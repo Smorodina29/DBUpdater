@@ -1,17 +1,11 @@
 package com.company;
 
-import com.company.data.Address;
-import com.company.data.FloatKeyValue;
-import com.company.data.KeyValue;
-import com.company.data.StringKeyValue;
+import com.company.data.*;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.security.Key;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,7 +29,7 @@ public class UtilServiceTest {
     }
 
     @Test
-    public void getTableStructure() throws Exception{
+    public void getTableStructure() throws Exception {
 
     }
 
@@ -74,7 +68,7 @@ public class UtilServiceTest {
         String originalTableName = "address";
         List<Column> structure = UpdateService.getTableStructure(originalTableName);
         String tempTableName = UpdateService.createTempTable(originalTableName, structure);
-        UpdateService.updateTable(tempTableName, data );
+        UpdateService.updateTable(tempTableName, data);
     }
 
     @Test
@@ -102,7 +96,39 @@ public class UtilServiceTest {
 
         String tableName = "address";
         String path = "test/resources/address.xls";
-        Column targetColumn = new Column("regionid", "int", DataType.FLOAT, true,0);
+        Column targetColumn = new Column("regionid", "int", DataType.FLOAT, true, 0);
+        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void readDateDataFromExcel() {
+        ArrayList<KeyValue> expected = new ArrayList<>();
+        ;
+        expected.add(new DateKeyValue(1, new GregorianCalendar(2016, 10, 15).getTime()));
+        expected.add(new DateKeyValue(2, new GregorianCalendar(2019, 0, 25).getTime()));
+        expected.add(new DateKeyValue(3, new GregorianCalendar(2016, 4, 9).getTime()));
+        expected.add(new DateKeyValue(2, new GregorianCalendar(2016, 11, 12).getTime()));
+
+        String tableName = "address";
+        String path = "test/resources/address.xls";
+        Column targetColumn = new Column("date", "datetime", DataType.DATETIME, true, 0);
+        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        assertEquals(expected, actual);
+
+    }
+
+    @Test
+    public void readBoolDataFromExcel() {
+        ArrayList<KeyValue> expected = new ArrayList<>();
+        expected.add(new BooleanKeyValue(1, true));
+        expected.add(new BooleanKeyValue(2, false));
+        expected.add(new BooleanKeyValue(3, true));
+        expected.add(new BooleanKeyValue(2, true));
+
+        String tableName = "address";
+        String path = "test/resources/address.xls";
+        Column targetColumn = new Column("isTradenet", "boolean", DataType.BOOLEAN, true, 0);
         List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
