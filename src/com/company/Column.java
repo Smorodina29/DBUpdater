@@ -7,21 +7,24 @@ public class Column {
 
     String name;
     String type;
+    DataType dataType;
     boolean isNullable;
     int length;
 
-    Column(String name, String type, boolean isNullable, int length){
+    Column(String name, String type, DataType dataType, boolean isNullable, int length){
         this.name = name;
         this.type = type;
+        this.dataType = dataType;
         this.isNullable = isNullable;
         this.length = length;
     }
 
     @Override
     public String toString() {
-        return  "Column{" +
+        return "Column{" +
                 "name='" + name + '\'' +
                 ", type='" + type + '\'' +
+                ", dataType=" + dataType +
                 ", isNullable=" + isNullable +
                 ", length=" + length +
                 '}';

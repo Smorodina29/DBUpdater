@@ -3,20 +3,21 @@ package com.company.data;
 /**
  * Created by Александр on 13.11.2016.
  */
-public class KeyValue {
-    int key;
-    String value;
+public class KeyValue<T> {
+    public int key;
+    public T value;
 
-    public KeyValue(int key, String value) {
+    public KeyValue(int key, T value) {
         this.key = key;
         this.value = value;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        KeyValue keyValue = (KeyValue) o;
+        KeyValue<?> keyValue = (KeyValue<?>) o;
 
         if (key != keyValue.key) return false;
         return value != null ? value.equals(keyValue.value) : keyValue.value == null;

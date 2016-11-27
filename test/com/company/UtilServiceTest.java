@@ -1,8 +1,11 @@
 package com.company;
 
 import com.company.data.Address;
+import com.company.data.FloatKeyValue;
 import com.company.data.KeyValue;
+import com.company.data.StringKeyValue;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.security.Key;
 import java.util.ArrayList;
@@ -76,15 +79,30 @@ public class UtilServiceTest {
     @Test
     public void readDataFromFile() {
         ArrayList<KeyValue> expected = new ArrayList<>();
-        expected.add(new KeyValue(1, "Nevskiy prospect, 1"));
-        expected.add(new KeyValue(2, "Lenina st, 2"));
-        expected.add(new KeyValue(3, "Moskovskaya, 17 "));
-        expected.add(new KeyValue(2, "Lenina st, 3"));
+        expected.add(new StringKeyValue(1, "Nevskiy prospect, 1"));
+        expected.add(new StringKeyValue(2, "Lenina st, 2"));
+        expected.add(new StringKeyValue(3, "Moskovskaya, 17 "));
+        expected.add(new StringKeyValue(2, "Lenina st, 3"));
 
         String tableName = "address";
         String path = "C:\\tmp\\temp.xls";
-        String targetColumnName = "address";
-        ArrayList<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumnName);
+        Column targetColumn = new Column("address", "varchar", DataType.VARCHAR, false, 50);
+        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void readIntDataFromFile() {
+        ArrayList<KeyValue> expected = new ArrayList<>();
+        expected.add(new FloatKeyValue(1, 2d));
+        expected.add(new FloatKeyValue(2, 1d));
+        expected.add(new FloatKeyValue(3, 5d));
+        expected.add(new FloatKeyValue(2, 1d));
+
+        String tableName = "address";
+        String path = "C:\\tmp\\temp.xls";
+        Column targetColumn = new Column("regionid", "int", DataType.FLOAT, true,0);
+        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 }

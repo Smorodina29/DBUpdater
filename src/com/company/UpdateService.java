@@ -1,13 +1,14 @@
 package com.company;
 
 import com.company.data.Address;
+import com.company.data.FloatKeyValue;
 import com.company.data.KeyValue;
+import com.company.data.StringKeyValue;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,7 +18,6 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -108,8 +108,8 @@ public class UpdateService {
                 String name = rs.getString(1);
                 String dataType = rs.getString(2);
                 boolean isNullable = "YES".equals(rs.getString(3));
-                int length = rs.getInt(4);
-                results.add(new Column(name, dataType, isNullable, length));
+                int length = rs.getInt(4);//null -- 0
+                results.add(new Column(name, dataType, DataType.VARCHAR, isNullable, length));
             }
         } catch (SQLException e) {
             System.out.println("Error:" + e);
@@ -178,7 +178,7 @@ public class UpdateService {
         }
     }
 
-    public static ArrayList<KeyValue> readFromExcel(String path, String tableName, String targetColumnName) {
+    public static ArrayList<KeyValue> readFromExcel(String path, String tableName, Column targetColumn) {
         ArrayList<KeyValue> result = new ArrayList<KeyValue>();
         /*
          HSSFRow row = sheet.getRow(0);
@@ -204,22 +204,22 @@ public class UpdateService {
             int lastX = row.getLastCellNum(); //last column
             System.out.println("LastX=" + lastX);
 
-
+            //search for id and target column indexes
             for (; x < lastX; x++) {
                 System.out.println("x="+x);
                 HSSFCell cell = row.getCell(x);
 
                 if (cell == null) throw new RuntimeException("Empty header at index " + x);
 
-                String currentCellValue = cell.getStringCellValue(); //current value of cell
-                if ("id".equalsIgnoreCase(currentCellValue)) {
+                String currentHeaderName = cell.getStringCellValue(); //current value of cell
+                if ("id".equalsIgnoreCase(currentHeaderName)) {
                     if (idX > -1) {
                         throw new RuntimeException("Two ID columns");
                     } else {
                         idX = x;
                     }
                 }
-                if (targetColumnName.equalsIgnoreCase(currentCellValue)) {
+                if (targetColumn.name.equalsIgnoreCase(currentHeaderName)) {
                     if (res>-1) {
                         throw new RuntimeException("Two target columns");
                     }
@@ -238,14 +238,19 @@ public class UpdateService {
                 row = sheet.getRow(y);
                 if (row == null) continue;//skip empty row
 
-                HSSFCell cellId = row.getCell(idX);
-                HSSFCell cellRes = row.getCell(res);
+                HSSFCell idCell = row.getCell(idX);
+                HSSFCell resCell = row.getCell(res);
 
-                if (cellId !=null && cellId.getNumericCellValue() > 0) {
-                    String value = cellRes != null ? cellRes.getStringCellValue() : null;
-                    KeyValue kv = new KeyValue((int)(cellId.getNumericCellValue()), value);
+                int cellType = resCell != null ? resCell.getCellType() : -1;
+                System.out.println("cell [" + res + ", " + y + "] type=" + cellType);
+
+                boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > 0;
+                if (hasIdValue) {
+                    int id = (int) (idCell.getNumericCellValue());
+                    KeyValue kv = getCellValue(id, resCell, targetColumn, res, y);
+                    System.out.println("kv=" + kv);
                     result.add(kv);
-                } else if (cellRes!=null && cellRes.getStringCellValue()== null){
+                } else if (resCell!=null && resCell.getStringCellValue()== null){
                     throw new RuntimeException("Row with index #" + y  + " is empty");
                 }
             }
@@ -255,6 +260,53 @@ public class UpdateService {
         }
 
         return result;
+    }
+
+    private static KeyValue getCellValue(int id, HSSFCell cell, Column column, int x, int y) {
+        if (cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+            if (!column.isNullable) {
+                throw new RuntimeException("Cell[" + x + ", " + y + "] is not nullable.");
+            }
+            return createEmptyKeyValue(id, column);
+        }
+
+        int cellType = cell.getCellType();
+        if (!correctType(cellType, column.dataType)) {
+            throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
+        }
+
+        KeyValue result;
+        switch (cellType) {
+            case Cell.CELL_TYPE_STRING:
+                result = new StringKeyValue(id, cell.getStringCellValue());
+                break;
+            case Cell.CELL_TYPE_NUMERIC:
+                result = new FloatKeyValue(id, cell.getNumericCellValue());
+                break;
+            default:
+                throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
+        }
+
+        return result;
+    }
+
+    private static KeyValue createEmptyKeyValue(int id, Column column) {
+        KeyValue result;
+        switch (column.dataType) {
+            case FLOAT:
+                result = new FloatKeyValue(id, null);
+                break;
+            case VARCHAR:
+                result = new StringKeyValue(id, null);
+                break;
+            default:
+                throw new RuntimeException("Unsupported type `" + column + "'!");
+        }
+        return result;
+    }
+
+    private static boolean correctType(int cellType, DataType dataType) {
+        return Utils.dataTypesPairs.contains(new Pair<>(cellType, dataType));
     }
 }
 
