@@ -1,13 +1,15 @@
 package com.company;
 
+import com.company.check.PresentRowsCheck;
+import com.company.check.RowCountCheck;
+import com.company.check.UniqueRowsCheck;
 import com.company.data.*;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
-import java.security.Key;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Александр on 17.07.2016.
@@ -131,5 +133,41 @@ public class UtilServiceTest {
         Column targetColumn = new Column("isTradenet", "boolean", DataType.BOOLEAN, true, 0);
         List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void updateScriptTest() {
+        RowCountCheck check = new RowCountCheck();
+        String tableName = "address";
+        String targetTableName = "address_16102016_05_39";
+        String columnName = "address";
+
+        boolean passed = UpdateService.checkForUpdate1(tableName, columnName, targetTableName, check);
+        assertTrue(passed);
+    }
+
+
+    @Test
+    public void checkUniqueRowsTest() {
+        UniqueRowsCheck check = new UniqueRowsCheck();
+
+        String tableName = "address";
+        String targetTableName = "address_16102016_05_39";
+        String columnName = "address";
+
+        boolean passed = UpdateService.checkForUpdate2(tableName, columnName, targetTableName, check, 4);
+        assertTrue(passed);
+    }
+
+    @Test
+    public void checkRowsPresentTest(){
+        PresentRowsCheck check = new PresentRowsCheck();
+
+        String tableName = "address";
+        String targetTableName = "address_16102016_05_39";
+        String columnName = "address";
+
+        boolean passed = UpdateService.checkForUpdate3(tableName, columnName, targetTableName, check, 4);
+        assertTrue(passed);
     }
 }

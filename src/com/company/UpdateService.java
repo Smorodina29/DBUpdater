@@ -1,5 +1,8 @@
 package com.company;
 
+import com.company.check.PresentRowsCheck;
+import com.company.check.RowCountCheck;
+import com.company.check.UniqueRowsCheck;
 import com.company.data.*;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -327,6 +330,70 @@ public class UpdateService {
     private static boolean correctType(int cellType, DataType dataType) {
         return Utils.allowedDataTypesPairs.contains(new Pair<>(cellType, dataType));
     }
+
+    public static boolean checkForUpdate1(String tableName, String columnName, String targetTableName, RowCountCheck check) {
+        boolean result = false;
+        Statement statement = null;
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+
+            String query1 = String.format(check.getSql1(), targetTableName);
+            ResultSet rs1 = statement.executeQuery(query1);
+            rs1.next();
+            int coun1 =  rs1.getInt(1);
+
+            String query2 = String.format(check.getSql1(), targetTableName);
+            ResultSet rs2 = statement.executeQuery(query2);
+            rs2.next();
+            int coun2 =  rs2.getInt(1);
+            result = coun1 == coun2;
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return result;
+    }
+
+    public static boolean checkForUpdate2(String tableName, String columnName, String targetTableName, UniqueRowsCheck check, long numberOfRows) {
+        boolean result = false;
+        Statement statement = null;
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+            String query1 = String.format(check.getSql(), targetTableName, tableName, columnName, columnName);
+            ResultSet rs1 = statement.executeQuery(query1);
+            rs1.next();
+            int coun1 =  rs1.getInt(1);
+            System.out.println("count=" + coun1);
+            result = coun1 == numberOfRows;
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return result;
+    }
+
+    public static boolean checkForUpdate3(String tableName, String columnName, String targetTableName, PresentRowsCheck check, long numberOfRows) {
+        boolean result = false;
+        Statement statement = null;
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+            String query = String.format(check.getSql(), targetTableName, tableName, columnName, columnName);
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            int count =  rs.getInt(1);
+            System.out.println("count=" + count);
+            result = count == 0;
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return result;
+    }
+
+
 }
 
 
