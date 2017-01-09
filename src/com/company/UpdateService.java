@@ -410,6 +410,27 @@ public class UpdateService {
     }
 
 
+    public static List<Column> filterForUpdate(List<Column> columns, String columnName) {
+        ArrayList<Column> list = new ArrayList<>();
+        for (Column column : columns) {
+            if ("id".equalsIgnoreCase(column.name) || columnName.equalsIgnoreCase(column.name)) {
+                list.add(column);
+            }
+        }
+        //maybe add check result size equal 2
+        return list;
+    }
+
+    public static List<Column> filterForAdd(List<Column> columns) {
+        ArrayList<Column> list = new ArrayList<>();
+        for (Column column : columns) {
+            if (!"id".equalsIgnoreCase(column.name)) {
+                list.add(column);
+            }
+        }
+        //maybe check result size equal for columns.length-1
+        return list;
+    }
 }
 
 

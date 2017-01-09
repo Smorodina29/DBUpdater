@@ -182,4 +182,45 @@ public class UtilServiceTest {
         boolean passed = UpdateService.updateData(tableName, columnName, targetTableName, columnTargetName);
         assertTrue(passed);
     }*/
+
+    @Test
+    public void filterColumnsForUpdate() {
+        /*Column{name='id', type='int', dataType=VARCHAR, isNullable=false, length=0}
+        Column{name='address', type='varchar', dataType=VARCHAR, isNullable=false, length=50}
+        Column{name='regionid', type='int', dataType=VARCHAR, isNullable=true, length=0}*/
+        List<Column> data = new ArrayList<>();
+        data.add(new Column("id", "int", DataType.VARCHAR, false, 0));
+        data.add(new Column("address", "varchar", DataType.VARCHAR, false, 50));
+        data.add(new Column("regionid", "int", DataType.VARCHAR, true, 0));
+        data.add(new Column("street", "varchar", DataType.VARCHAR, true, 140));
+
+
+        List<Column> expected = new ArrayList<>();
+        expected.add(new Column("id", "int", DataType.VARCHAR, false, 0));
+        expected.add(new Column("address", "varchar", DataType.VARCHAR, false, 50));
+
+        String targetColumn = "address";
+        List<Column> actual = UpdateService.filterForUpdate(data, targetColumn);
+        assertEquals(expected, actual);
+    }
+
+    /* ADD DATA*/
+    @Test
+    public void filterStructureForAdd() {
+        List<Column> data = new ArrayList<>();
+        data.add(new Column("id", "int", DataType.VARCHAR, false, 0));
+        data.add(new Column("address", "varchar", DataType.VARCHAR, false, 50));
+        data.add(new Column("regionid", "int", DataType.VARCHAR, true, 0));
+        data.add(new Column("street", "varchar", DataType.VARCHAR, true, 140));
+
+
+        List<Column> expected = new ArrayList<>();
+        expected.add(new Column("address", "varchar", DataType.VARCHAR, false, 50));
+        expected.add(new Column("regionid", "int", DataType.VARCHAR, true, 0));
+        expected.add(new Column("street", "varchar", DataType.VARCHAR, true, 140));
+
+        List<Column> actual = UpdateService.filterForAdd(data);
+        assertEquals(expected, actual);
+    }
+
 }
