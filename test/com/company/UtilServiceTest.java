@@ -170,4 +170,16 @@ public class UtilServiceTest {
         boolean passed = UpdateService.checkForUpdate3(tableName, columnName, targetTableName, check, 4);
         assertTrue(passed);
     }
+
+    /*@Test
+    public  void updateTest() {
+
+        String tableName = "address";
+        String targetTableName = "address_16102016_05_39";
+        String columnName = "regionid";
+        String columnTargetName = "regionid";
+
+        boolean passed = UpdateService.updateData(tableName, columnName, targetTableName, columnTargetName);
+        assertTrue(passed);
+    }*/
 }

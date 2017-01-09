@@ -393,6 +393,22 @@ public class UpdateService {
         return result;
     }
 
+    public static boolean updateData(String tableName, String columnName, String targetTableName, String columnTargetName) {
+        boolean result = false;
+        Statement statement = null;
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+            String query = String.format("update %s set %s = u.%s from %s u join %s s on u.id = s.id", tableName, columnName, columnName, targetTableName, columnTargetName);
+            statement.executeUpdate(query);
+            result = true;
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return result;
+    }
+
 
 }
 
