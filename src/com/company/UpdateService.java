@@ -16,15 +16,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by Александр on 17.07.2016.
  */
 public class UpdateService {
     public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm");
+    public  static  final SimpleDateFormat dateColumnFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public static List<String> getTableNamesForUpdate() {
         ArrayList<String> tablesForUpdate = new ArrayList<String>();
@@ -430,6 +430,146 @@ public class UpdateService {
         }
         //maybe check result size equal for columns.length-1
         return list;
+    }
+
+    public static List<Map<Column, String>> readForAdd(String filepath, String tableName, List<Column> targetColumns) {
+        ArrayList<Map<Column, String>> result = new ArrayList<>();
+
+        try {
+            HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(filepath));
+            HSSFSheet sheet = myExcelBook.getSheetAt(0);
+
+            System.out.println("FirstRow=" + sheet.getFirstRowNum() + ", LastRow=" + sheet.getLastRowNum() + ", PhysicalNumber=" + sheet.getPhysicalNumberOfRows());
+
+            HSSFRow row = sheet.getRow(0);
+            int lastX = row.getLastCellNum(); //last column
+            System.out.println("LastX=" + lastX);
+
+            List<Column> present = new ArrayList<>();
+            Map<Column, Integer> col2indexMap = new HashMap<>();
+            //search for columns
+            int x = 0; //x - current column
+            for (; x < lastX; x++) {
+                System.out.println("x="+x);
+                HSSFCell cell = row.getCell(x);
+
+                if (cell == null) throw new RuntimeException("Empty header at index " + x);
+
+                String currentHeaderName = cell.getStringCellValue(); //current value of cell
+                Column found = findColumnBy(currentHeaderName, targetColumns);
+
+                if (found == null) {
+                    throw new Exception("Found column with illegal name \'" + currentHeaderName + "\'");
+                }
+
+                if (present.contains(found)) {
+                    throw new Exception("Found duplicate column with name \'" + currentHeaderName + "\'");
+                }
+
+                present.add(found);
+                col2indexMap.put(found, x);
+            }
+
+            List<Column> mustPresent = filterNotNullable(targetColumns);
+            if (present.isEmpty()) {
+                String names = Utils.mkString(mustPresent);
+                throw new RuntimeException("No columns found in file. Must present: " + names + ".");
+            }
+
+            if (!present.containsAll(mustPresent)) {
+                String names = Utils.mkString(mustPresent);
+                throw new Exception("One or more not nullable columns are not present. Must present: " + names + ".");
+            }
+
+
+            //reading from file
+            int lastrow = sheet.getLastRowNum();
+            int y = 1; //index of row
+
+            for (; y<=lastrow; y++) {
+                row = sheet.getRow(y);
+                if (row == null) continue;//skip empty row
+
+                HashMap<Column, String> rowData = new HashMap<>();
+
+                for (Column column : present) {
+                    Integer indexOfColumnInRow = col2indexMap.get(column);
+                    HSSFCell cell = row.getCell(indexOfColumnInRow);
+
+                    int cellType = cell != null ? cell.getCellType() : -1;
+                    System.out.println("cell [" + indexOfColumnInRow + ", " + y + "] type=" + cellType);
+                    rowData.put(column, getCellValue(cell, column, indexOfColumnInRow, y));
+                }
+
+                result.add(rowData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;//может возвращать еще колонки, которые присутствуют в файле?
+    }
+
+    private static String getCellValue(HSSFCell cell, Column column, int x, int y) {//todo need to return correct value representation. Task-1
+        boolean isEmptyCell = cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK;
+        if (isEmptyCell) {
+            if (!column.isNullable) {
+                throw new RuntimeException("Cell[" + x + ", " + y + "] is not nullable.");
+            }
+            return null;
+        }
+
+        int cellType = cell.getCellType();
+        if (!correctType(cellType, column.dataType)) {
+            throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
+        }
+
+        String result;
+        switch (column.dataType) {
+            case VARCHAR:
+                result = cell.getStringCellValue();
+                break;
+            case FLOAT:
+                result = "" + (int)cell.getNumericCellValue();
+                break;
+            case DATETIME:
+                result = "" + dateColumnFormat.format(cell.getDateCellValue());
+                break;
+            case BOOLEAN:
+                String strBool = cell.getStringCellValue();
+                boolean value;
+                if ("true".equalsIgnoreCase(strBool)) {
+                    value = true;
+                } else if ("false".equalsIgnoreCase(strBool)) {
+                    value = false;
+                } else {
+                    throw new RuntimeException("Cell[" + x + ", " + y + "] is not correct boolean value=`" + strBool + "\'");
+                }
+                result = "" + value;
+                break;
+            default:
+                throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to expected(" + column.dataType + ")");
+        }
+
+        return result;
+    }
+
+    private static List<Column> filterNotNullable(List<Column> targetColumns) {
+        ArrayList<Column> list = new ArrayList<>();
+        for (Column column : targetColumns) {
+            if (!column.isNullable) {
+                list.add(column);
+            }
+        }
+        return list;
+    }
+
+    private static Column findColumnBy(String headerName, List<Column> columns) {
+        for (Column column : columns) {
+            if (column.name.equalsIgnoreCase(headerName)) {
+                return column;
+            }
+        }
+        return null;
     }
 }
 

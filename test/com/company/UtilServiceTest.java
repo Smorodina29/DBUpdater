@@ -223,4 +223,51 @@ public class UtilServiceTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void readFileForAdd() {
+        Column c1 = new Column("address", "varchar", DataType.VARCHAR, false, 50);
+        Column c2 = new Column("regionid", "int", DataType.FLOAT, true, 0);
+        Column c3 = new Column("date", "datetime", DataType.DATETIME, true, 10);
+        Column c4 = new Column("isTradenet", "boolean", DataType.BOOLEAN, true, 140);
+
+        List<Map<Column, String>> expected = new ArrayList<>();
+        expected.add(map(pair(c1, "Nevskiy prospect, 1"), pair(c2, "2"), pair(c3, "2016-11-15"), pair(c4, "true")));
+        expected.add(map(pair(c1, "Lenina st, 2"), pair(c2, "1"), pair(c3, "2019-01-25"), pair(c4, "false")));
+        expected.add(map(pair(c1, "Moskovskaya, 17 "), pair(c2, "5"), pair(c3, "2016-05-09"), pair(c4, "true")));
+        expected.add(map(pair(c1, "Lenina st, 3"), pair(c2, "1"), pair(c3, "2016-12-12"), pair(c4, "true")));
+
+        String tableName = "address";
+        String path = "test/resources/address_add.xls";
+        List<Column> targetColumns = new ArrayList<>();
+
+        targetColumns.add(c1);
+        targetColumns.add(c2);
+        targetColumns.add(c3);
+        targetColumns.add(c4);
+        List<Map<Column, String>> actual = UpdateService.readForAdd(path, tableName, targetColumns);
+        assertEquals(expected, actual);
+    }
+
+    private static Map<Column, String> map(Pair... pairs) {
+        HashMap<Column, String> map = new HashMap<>();
+        for (Pair pair : pairs) {
+            map.put(pair.column, pair.value);
+        }
+        return map;
+    }
+
+    public static Pair pair(Column column, String s) {
+        return new Pair(column, s);
+    }
+
+
+    static class Pair {
+        Column column;
+        String value;
+
+        public Pair(Column column, String value) {
+            this.column = column;
+            this.value = value;
+        }
+    }
 }

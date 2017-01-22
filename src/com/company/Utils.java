@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -61,5 +62,17 @@ public class Utils {
                 //ignore
             }
         }
+    }
+
+    public static String mkString(List<Column> mustPresent) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < mustPresent.size(); i++) {
+            Column column = mustPresent.get(i);
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append(column.name);
+        }
+        return sb.toString();
     }
 }
