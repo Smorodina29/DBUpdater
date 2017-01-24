@@ -1,9 +1,6 @@
 package com.company.data;
 
 import com.company.DataType;
-import com.company.data.KeyValue;
-
-import com.company.DataType;
 
 
 /**
@@ -12,6 +9,10 @@ import com.company.DataType;
 public class BooleanKeyValue extends KeyValue<Boolean> {
 
     public static final DataType TYPE = DataType.BOOLEAN;
+
+    public BooleanKeyValue(Boolean value) {
+        super(value);
+    }
 
     public BooleanKeyValue(int key, Boolean value) {
         super(key, value);

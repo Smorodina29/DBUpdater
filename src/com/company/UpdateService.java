@@ -23,7 +23,7 @@ import java.util.Date;
  * Created by Александр on 17.07.2016.
  */
 public class UpdateService {
-    public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm");
+    public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm_ss");
     public  static  final SimpleDateFormat dateColumnFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public static List<String> getTableNamesForUpdate() {
@@ -109,7 +109,7 @@ public class UpdateService {
                 String dataType = rs.getString(2);
                 boolean isNullable = "YES".equals(rs.getString(3));
                 int length = rs.getInt(4);//null -- 0
-                results.add(new Column(name, dataType, DataType.VARCHAR, isNullable, length));
+                results.add(new Column(name, dataType, Utils.getType(dataType), isNullable, length));
             }
         } catch (SQLException e) {
             System.out.println("Error:" + e);
@@ -282,7 +282,7 @@ public class UpdateService {
                 result = new StringKeyValue(key, cell.getStringCellValue());
                 break;
             case FLOAT:
-                result = new FloatKeyValue(key, cell.getNumericCellValue());
+                result = new FloatKeyValue(key, (float) cell.getNumericCellValue());
                 break;
             case DATETIME:
                 result = new DateKeyValue(key, cell.getDateCellValue());
@@ -432,8 +432,8 @@ public class UpdateService {
         return list;
     }
 
-    public static List<Map<Column, String>> readForAdd(String filepath, String tableName, List<Column> targetColumns) {
-        ArrayList<Map<Column, String>> result = new ArrayList<>();
+    public static List<Map<Column, KeyValue>> readForAdd(String filepath, String tableName, List<Column> targetColumns) {
+        ArrayList<Map<Column, KeyValue>> result = new ArrayList<>();
 
         try {
             HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(filepath));
@@ -459,7 +459,9 @@ public class UpdateService {
                 Column found = findColumnBy(currentHeaderName, targetColumns);
 
                 if (found == null) {
-                    throw new Exception("Found column with illegal name \'" + currentHeaderName + "\'");
+//                    throw new Exception("Found column with illegal name \'" + currentHeaderName + "\'");
+                    System.out.println("Skipped column `" + currentHeaderName + "\'");
+                    continue;
                 }
 
                 if (present.contains(found)) {
@@ -481,6 +483,10 @@ public class UpdateService {
                 throw new Exception("One or more not nullable columns are not present. Must present: " + names + ".");
             }
 
+            System.out.println("Columns that are present:");
+            for (Column column : present) {
+                System.out.println(column + " index=" + col2indexMap.get(column));
+            }
 
             //reading from file
             int lastrow = sheet.getLastRowNum();
@@ -490,7 +496,7 @@ public class UpdateService {
                 row = sheet.getRow(y);
                 if (row == null) continue;//skip empty row
 
-                HashMap<Column, String> rowData = new HashMap<>();
+                HashMap<Column, KeyValue> rowData = new HashMap<>();
 
                 for (Column column : present) {
                     Integer indexOfColumnInRow = col2indexMap.get(column);
@@ -509,7 +515,7 @@ public class UpdateService {
         return result;//может возвращать еще колонки, которые присутствуют в файле?
     }
 
-    private static String getCellValue(HSSFCell cell, Column column, int x, int y) {//todo need to return correct value representation. Task-1
+    private static KeyValue getCellValue(HSSFCell cell, Column column, int x, int y) {
         boolean isEmptyCell = cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK;
         if (isEmptyCell) {
             if (!column.isNullable) {
@@ -523,16 +529,16 @@ public class UpdateService {
             throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
         }
 
-        String result;
+        KeyValue result;
         switch (column.dataType) {
             case VARCHAR:
-                result = cell.getStringCellValue();
+                result = new StringKeyValue(cell.getStringCellValue());
                 break;
             case FLOAT:
-                result = "" + (int)cell.getNumericCellValue();
+                result = new FloatKeyValue((float) cell.getNumericCellValue());
                 break;
             case DATETIME:
-                result = "" + dateColumnFormat.format(cell.getDateCellValue());
+                result = new DateKeyValue(cell.getDateCellValue());
                 break;
             case BOOLEAN:
                 String strBool = cell.getStringCellValue();
@@ -544,7 +550,7 @@ public class UpdateService {
                 } else {
                     throw new RuntimeException("Cell[" + x + ", " + y + "] is not correct boolean value=`" + strBool + "\'");
                 }
-                result = "" + value;
+                result = new BooleanKeyValue(value);
                 break;
             default:
                 throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to expected(" + column.dataType + ")");
@@ -570,6 +576,83 @@ public class UpdateService {
             }
         }
         return null;
+    }
+
+    public static void fillTable(String tableName, List<Map<Column, KeyValue>> data) throws SQLException {
+        Connection connection = ConnectionProvider.get().getConnection();
+        PreparedStatement ps = null;
+
+        if (data.isEmpty()) {
+            throw new RuntimeException("Data is empty.");
+        }
+
+        List<Column> columns = new ArrayList<>(data.get(0).keySet());
+
+        String sql = generateSqlForInsert(columns, tableName);
+        System.out.println("Generated SQL for insertion: `" + sql + "\'");
+        int count = 0;
+        int batchSize = 10;
+        try {
+            ps = connection.prepareStatement(sql);
+
+            for (Map<Column, KeyValue> map : data) {
+
+                for (int i = 0; i < columns.size(); i++) {
+                    Column column = columns.get(i);
+                    setValueFor(column, map.get(column), i+ 1, ps);
+                }
+                ps.addBatch();
+                if (++count % batchSize == 0) {
+                    ps.executeBatch();
+                }
+            }
+
+            ps.executeBatch();
+        }  finally {
+            Utils.closeQuietly(ps);
+            Utils.closeQuietly(connection);
+        }
+    }
+
+    private static void setValueFor(Column column, KeyValue value, int parameterIndex, PreparedStatement ps) throws SQLException {
+        System.out.println("Setting " + column.name + " value '" + value.value + "'");
+        switch (column.dataType) {
+            case VARCHAR:
+                ps.setString(parameterIndex, ((StringKeyValue)value).getValue());
+                break;
+            case FLOAT:
+                ps.setFloat(parameterIndex, ((FloatKeyValue)value).getValue());
+                break;
+            case DATETIME:
+                ps.setDate(parameterIndex, new java.sql.Date(((DateKeyValue)value).getValue().getTime()));
+                break;
+            case BOOLEAN:
+                ps.setBoolean(parameterIndex, ((BooleanKeyValue)value).getValue());
+                break;
+            default:
+                throw new RuntimeException("Unsupported type for insertion: " + column.dataType);
+        }
+    }
+
+    private static String generateSqlForInsert(List<Column> columns, String tableName) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("INSERT INTO ").append(tableName).append(" ");
+        String columnNames = Utils.mkString(columns);
+
+        String wildCards = generateWildcards(columns.size());
+        sb.append("(").append(columnNames).append(") VALUES (").append(wildCards).append(")");
+        return sb.toString();
+    }
+
+    private static String generateWildcards(int number) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < number; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append("?");
+        }
+        return sb.toString();
     }
 }
 

@@ -9,6 +9,10 @@ public class StringKeyValue extends KeyValue<String> {
 
     public static final DataType TYPE = DataType.VARCHAR;
 
+    public StringKeyValue(String value) {
+        super(value);
+    }
+
     public StringKeyValue(int key, String value) {
         super(key, value);
     }

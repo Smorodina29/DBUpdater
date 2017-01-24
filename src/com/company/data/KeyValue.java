@@ -7,6 +7,10 @@ public class KeyValue<T> {
     public int key;
     public T value;
 
+    public KeyValue(T value) {
+        this.value = value;
+    }
+
     public KeyValue(int key, T value) {
         this.key = key;
         this.value = value;

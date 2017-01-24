@@ -6,9 +6,7 @@ import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Александр on 17.07.2016.
@@ -18,6 +16,7 @@ public class Utils {
     }
 
     public static Set<Pair<Integer, DataType>> allowedDataTypesPairs;
+    public static Map<String, DataType> str2DateType;
 
     static {
         allowedDataTypesPairs = new HashSet<>();
@@ -30,6 +29,17 @@ public class Utils {
         allowedDataTypesPairs.add(new Pair<>(Cell.CELL_TYPE_BLANK, DataType.VARCHAR));
         allowedDataTypesPairs.add(new Pair<>(Cell.CELL_TYPE_BLANK, DataType.DATETIME));
         allowedDataTypesPairs.add(new Pair<>(Cell.CELL_TYPE_BLANK, DataType.BOOLEAN));
+
+
+        str2DateType = new HashMap<>();
+        str2DateType.put("varchar", DataType.VARCHAR);
+        str2DateType.put("int", DataType.FLOAT);
+        str2DateType.put("datetime", DataType.DATETIME);
+        str2DateType.put("boolean", DataType.BOOLEAN);
+    }
+
+    public static DataType getType(String dataType) {
+        return str2DateType.get(dataType);
     }
 
 
@@ -64,14 +74,19 @@ public class Utils {
         }
     }
 
-    public static String mkString(List<Column> mustPresent) {
+    public static String mkString(Collection<Column> mustPresent) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < mustPresent.size(); i++) {
-            Column column = mustPresent.get(i);
-            if (i != 0) {
+
+        Iterator<Column> iterator = mustPresent.iterator();
+        boolean first = true;
+        while (iterator.hasNext()) {
+            Column next = iterator.next();
+            if (!first) {
                 sb.append(", ");
+            } else {
+                first = false;
             }
-            sb.append(column.name);
+            sb.append(next.name);
         }
         return sb.toString();
     }

@@ -11,6 +11,10 @@ public class DateKeyValue extends KeyValue<Date> {
 
     public static final DataType TYPE = DataType.DATETIME;
 
+    public DateKeyValue(Date value) {
+        super(value);
+    }
+
     public DateKeyValue(int key, Date value) {
         super(key, value);
     }
