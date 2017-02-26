@@ -27,7 +27,7 @@ public class UtilServiceTest {
     public void getColumnNames() throws Exception {
         String tableName = "address";
         List<String> expected = Arrays.asList("id", "address", "regionid");
-        List<String> actual = UpdateService.getTableColumns(tableName);
+        List<String> actual = UpdateService.getTableColumns(tableName, true);
         assertEquals(actual, expected);
     }
 
@@ -40,7 +40,7 @@ public class UtilServiceTest {
     public void exportTableToFile() {
         String tableName = "address";
         String path = "C:\\tmp\\1.xls";
-        UpdateService.exportTableToFile(tableName, path);
+        UpdateService.exportTableToFile(tableName, path, true);
     }
 
     @Test

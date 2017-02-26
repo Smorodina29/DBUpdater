@@ -46,7 +46,7 @@ public class UpdateService {
     }
 
 
-    public static List<String> getTableColumns(String tableName) {
+    public static List<String> getTableColumns(String tableName, boolean forUpdate) {
         ArrayList<String> columnNames = new ArrayList<String>();
 
         Statement statement = null;
@@ -55,7 +55,10 @@ public class UpdateService {
             String queryString = String.format("select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='%s'", tableName);
             ResultSet rs = statement.executeQuery(queryString);
             while (rs.next()) {
-                columnNames.add(rs.getString(1));
+                String name = rs.getString(1);
+                if (forUpdate || !name.equalsIgnoreCase("id")){
+                    columnNames.add(name);
+                }
             }
         } catch (SQLException e) {
             System.out.println("Error:" + e);
@@ -66,8 +69,8 @@ public class UpdateService {
     }
 
 
-    public static void exportTableToFile(String tableName, String path) {
-        List<String> columnNames = getTableColumns(tableName);
+    public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
+        List<String> columnNames = getTableColumns(tableName, forUpdate);
         System.out.println("Columns for \'" + tableName + "\':" + columnNames);
         HSSFWorkbook book = new HSSFWorkbook();
         HSSFSheet sheet = book.createSheet(tableName);
