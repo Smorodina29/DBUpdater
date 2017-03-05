@@ -266,6 +266,22 @@ public class UtilServiceTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void createSqlForInsertion() {
+        List<Column> columns = new ArrayList<>();
+        columns.add(new Column("address", "varchar", DataType.VARCHAR, false, 50));
+        columns.add(new Column("regionid", "int", DataType.FLOAT, true, 0));
+
+        String targetTable = "address";
+        String temppTable = "address_tmp";
+
+        String expected = "INSERT INTO address (address, regionid) SELECT t.address, t.regionid FROM address_tmp AS t";
+
+        String actual = UpdateService.generateSqlForCopingData(targetTable, temppTable, columns);
+
+        assertEquals(expected, actual);
+    }
+
     private static Map<Column, KeyValue> map(Pair... pairs) {
         HashMap<Column, KeyValue> map = new HashMap<>();
         for (Pair pair : pairs) {

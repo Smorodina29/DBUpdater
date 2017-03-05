@@ -602,7 +602,7 @@ public class UpdateService {
 
                 for (int i = 0; i < columns.size(); i++) {
                     Column column = columns.get(i);
-                    setValueFor(column, map.get(column), i+ 1, ps);
+                    setValueFor(column, map.get(column), i + 1, ps);
                 }
                 ps.addBatch();
                 if (++count % batchSize == 0) {
@@ -617,8 +617,60 @@ public class UpdateService {
         }
     }
 
+    public static int addDataFromTempTable(String tableName, String tempTableName, List<Column> structure) {
+        Statement statement = null;
+        int affected = -1;
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+            String query = generateSqlForCopingData(tableName, tempTableName, structure);
+            System.out.println("Generated SQL for coping data: " + query);
+            affected = statement.executeUpdate(query);
+            System.out.println("Copied " + affected + " row(s).");
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return affected;
+    }
+
+    public static String generateSqlForCopingData(String targetTable, String tempTableName, List<Column> structure) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("INSERT INTO ").append(targetTable).append(" (");
+
+        for (int i = 0; i < structure.size(); i++) {
+            Column column = structure.get(i);
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(column.name);
+        }
+
+        sb.append(") SELECT ");
+
+
+        for (int i = 0; i < structure.size(); i++) {
+            Column column = structure.get(i);
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append("t.").append(column.name);
+        }
+
+        sb.append(" FROM ").append(tempTableName).append(" AS t");
+
+        return sb.toString();
+    }
+
     private static void setValueFor(Column column, KeyValue value, int parameterIndex, PreparedStatement ps) throws SQLException {
-        System.out.println("Setting " + column.name + " value '" + value.value + "'");
+        System.out.println("Setting `" + column.name + "' value '" + value + "'");
+
+        if (value == null) {
+            ps.setNull(parameterIndex, JDBCType.valueOf(column.dataType.name()).getVendorTypeNumber());
+            return;
+        }
+
         switch (column.dataType) {
             case VARCHAR:
                 ps.setString(parameterIndex, ((StringKeyValue)value).getValue());
@@ -651,7 +703,7 @@ public class UpdateService {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < number; i++) {
             if (i > 0) {
-                sb.append(",");
+                sb.append(", ");
             }
             sb.append("?");
         }

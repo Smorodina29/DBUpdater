@@ -1,12 +1,15 @@
 package com.company.ui;
 
+import com.company.Column;
 import com.company.UpdateService;
+import com.company.data.KeyValue;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 
@@ -114,6 +117,32 @@ public class SwingInterface extends JFrame {
 
         add.add(tablesCombobox);
         JButton importTableAdd = new JButton("Загрузить файл");
+        importTableAdd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser chooser = new JFileChooser();
+                chooser.setFileFilter(new FileNameExtensionFilter("xls", "xls"));
+                if (chooser.showOpenDialog(SwingInterface.this) == JFileChooser.APPROVE_OPTION){
+                    String path = chooser.getSelectedFile().getAbsolutePath();
+                    String targetTableName = tablesCombobox.getItemAt(tablesCombobox.getSelectedIndex());
+                    List<Column> columns = UpdateService.filterForAdd(UpdateService.getTableStructure(targetTableName));
+                    List<Map<Column, KeyValue>> data = UpdateService.readForAdd(path, targetTableName, columns);
+
+                    String tempTableName = UpdateService.createTempTable(targetTableName, columns);
+                    try {
+                        UpdateService.fillTable(tempTableName, data);
+
+                        int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
+
+                        JOptionPane.showMessageDialog(null, "Добавлено " + affected + " записей в таблицу " + targetTableName, "InfoBox: Добавление", JOptionPane.INFORMATION_MESSAGE);
+
+                    } catch (SQLException e1) {
+                        System.out.println("Error: " + e1.getMessage());
+                        e1.printStackTrace();
+                    }
+                }
+            }
+        });
         JButton exportTemplateAdd = new JButton("Выгрузить шаблон");
         exportTemplateAdd.addActionListener(new ActionListener() {
             @Override
@@ -125,8 +154,9 @@ public class SwingInterface extends JFrame {
                     if (!path.endsWith(".xls")){
                         path += ".xls";
                     }
-                    System.out.println("Path=" + path);
-                    UpdateService.exportTableToFile(tablesCombobox.getItemAt(tablesCombobox.getSelectedIndex()), path, false);
+                    String targetTableName = tablesCombobox.getItemAt(tablesCombobox.getSelectedIndex());
+                    UpdateService.exportTableToFile(targetTableName, path, false);
+                    System.out.println("Exported template for `" + targetTableName + "' to `" + path + "'");
                 }
             }
         });
