@@ -2,6 +2,11 @@ package com.company.ui;
 
 import com.company.Column;
 import com.company.UpdateService;
+import com.company.check.CheckException;
+import com.company.check.PresentRowsCheck;
+import com.company.check.RowCountCheck;
+import com.company.check.UniqueRowsCheck;
+import com.company.data.FloatKeyValue;
 import com.company.data.KeyValue;
 
 import javax.swing.*;
@@ -38,31 +43,24 @@ public class SwingInterface extends JFrame {
 
     private JPanel createUpdatePane() {
         JPanel update = new JPanel();
-        JComboBox<String> tablesForUpdate = new JComboBox<>();
-
-
+        JComboBox<String> tablesForUpdateBox = new JComboBox<>();
 
         JComboBox<String> columnsCombobox = new JComboBox<>();
 
-        tablesForUpdate.addActionListener(new ActionListener() {
+        tablesForUpdateBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                String targetTable = tablesForUpdate.getItemAt(tablesForUpdate.getSelectedIndex());
+                String targetTable = tablesForUpdateBox.getItemAt(tablesForUpdateBox.getSelectedIndex());
                 System.out.println("User selected table `" + targetTable + "'");
 
                 List<String> columnNames = UpdateService.getTableColumns(targetTable, true);
-
-                for (int i = 0; i < columnNames.size(); i++) {
-                    String name = columnNames.get(i);
-                    if (name.equalsIgnoreCase("id")) {
-                        columnNames.remove(i);
-                        break;
-                    }
-                }
-
+                columnNames.remove("id");
                 System.out.println("Table " + targetTable + " has columns for update: " + columnNames);
                 columnsCombobox.removeAllItems();
+
+
+
                 for (String columnName : columnNames) {
                     columnsCombobox.addItem(columnName);
                 }
@@ -71,13 +69,85 @@ public class SwingInterface extends JFrame {
 
         java.util.List<String> tablesName = UpdateService.getTableNamesForUpdate();//todo handle server not available exception
         for (String name : tablesName) {
-            tablesForUpdate.addItem(name);
+            tablesForUpdateBox.addItem(name);
         }
 
-        update.add(tablesForUpdate);
+        update.add(tablesForUpdateBox);
         update.add(columnsCombobox);
 
         JButton importTableU = new JButton("Загрузить файл");
+
+        importTableU.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser chooser = new JFileChooser();
+                chooser.setFileFilter(new FileNameExtensionFilter("xls", "xls"));
+                if (chooser.showOpenDialog(SwingInterface.this) == JFileChooser.APPROVE_OPTION){
+                    String path = chooser.getSelectedFile().getAbsolutePath();
+                    String targetTableName = tablesForUpdateBox.getItemAt(tablesForUpdateBox.getSelectedIndex());
+                    String targetColumnName = columnsCombobox.getItemAt(columnsCombobox.getSelectedIndex());
+                    List<Column> columns = UpdateService.filterForUpdate(UpdateService.getTableStructure(targetTableName), targetColumnName);
+                    Column targetColumn = UpdateService.findColumn(targetColumnName, columns);
+                    Column idColumn = UpdateService.findColumn("id", columns);
+                    ArrayList<KeyValue> keyValues = UpdateService.readForUpdate(path, targetTableName, targetColumn);
+                    int updateRowsCount = keyValues.size();
+
+                    ArrayList<Map<Column, KeyValue>> data = new ArrayList<>();
+
+                    for (KeyValue keyValue : keyValues) {
+                        HashMap<Column, KeyValue> map = new HashMap<>();
+                        map.put(idColumn, new FloatKeyValue((float) keyValue.key));//todo refactor this ugly code
+                        map.put(targetColumn, keyValue);
+                        data.add(map);
+                    }
+                    String tempTableName = UpdateService.createTempTable(targetTableName, columns);
+                    try {
+                        UpdateService.fillTable(tempTableName, data);
+
+                        System.out.println("Start checking tables!");
+
+                        //todo finish checks
+
+                        RowCountCheck check1 = new RowCountCheck();
+                        boolean passed1 = UpdateService.checkForUpdate1(targetTableName, targetColumnName, tempTableName, check1);
+                        System.out.println("Check:" + check1.getName() + " PASSED:" + passed1);
+                        if (!passed1) {
+                            throw new CheckException(check1.getName());
+                        }
+                        UniqueRowsCheck check2 = new UniqueRowsCheck();
+
+                        boolean passed2 = UpdateService.checkForUpdate2(targetTableName, targetColumnName, tempTableName, check2, updateRowsCount);
+                        System.out.println("Check:" + check2.getName() + " PASSED:" + passed2);
+                        if (!passed2) {
+                            throw new CheckException(check2.getName());
+                        }
+
+                        PresentRowsCheck check3 = new PresentRowsCheck();
+                        boolean passed3 = UpdateService.checkForUpdate3(targetTableName, targetColumnName, tempTableName, check3);
+                        System.out.println("Check:" + check3.getName() + " PASSED:" + passed3);
+
+                        if (!passed3) {
+                            JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check3.getName(),"InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                        }
+
+                        int affected = UpdateService.updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName, targetColumnName);
+                        if (affected > 0) {
+                            JOptionPane.showMessageDialog(null, "Обновлено " + updateRowsCount + " записей в таблице " + targetTableName, "InfoBox: Обновление.", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Ни одна запись не была обновлена в таблице " + targetTableName + ".", "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                        }
+                    } catch (SQLException e1) {
+                        System.out.println("Error: " + e1.getMessage());
+                        e1.printStackTrace();
+                    } catch (CheckException e1) {
+                        System.out.println("Error: " + e1.getMessage());
+                        JOptionPane.showMessageDialog(null, "Не удалось обновить записи в таблице. Не прошла проверка: " + e1.getMessage(), "InfoBox: Обновление.", JOptionPane.ERROR_MESSAGE);
+                        e1.printStackTrace();
+                    }
+                }
+            }
+        });
+
         JButton exportTemplateU = new JButton("Выгрузить шаблон");
         exportTemplateU.addActionListener(new ActionListener() {
             @Override
@@ -90,7 +160,7 @@ public class SwingInterface extends JFrame {
                         path += ".xls";
                     }
                     System.out.println("Path=" + path);
-                    UpdateService.exportTableToFile(tablesForUpdate.getItemAt(tablesForUpdate.getSelectedIndex()), path, true);
+                    UpdateService.exportTableToFile(tablesForUpdateBox.getItemAt(tablesForUpdateBox.getSelectedIndex()), path, true);
                 }
             }
         });
@@ -131,10 +201,10 @@ public class SwingInterface extends JFrame {
                     String tempTableName = UpdateService.createTempTable(targetTableName, columns);
                     try {
                         UpdateService.fillTable(tempTableName, data);
-
+                        //todo add checks
                         int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
 
-                        JOptionPane.showMessageDialog(null, "Добавлено " + affected + " записей в таблицу " + targetTableName, "InfoBox: Добавление", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Добавлено " + affected + " записей в таблицу " + targetTableName, "InfoBox: Добавление.", JOptionPane.INFORMATION_MESSAGE);
 
                     } catch (SQLException e1) {
                         System.out.println("Error: " + e1.getMessage());

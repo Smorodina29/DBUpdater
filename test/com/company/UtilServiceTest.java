@@ -24,7 +24,15 @@ public class UtilServiceTest {
     }
 
     @Test
-    public void getColumnNames() throws Exception {
+    public void getColumnNamesForAdd() throws Exception {
+        String tableName = "address";
+        List<String> expected = Arrays.asList("address", "regionid");
+        List<String> actual = UpdateService.getTableColumns(tableName, false);
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    public void getColumnNamesForUpdate() throws Exception {
         String tableName = "address";
         List<String> expected = Arrays.asList("id", "address", "regionid");
         List<String> actual = UpdateService.getTableColumns(tableName, true);
@@ -85,7 +93,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("address", "varchar", DataType.VARCHAR, false, 50);
-        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 
@@ -100,7 +108,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("regionid", "int", DataType.FLOAT, true, 0);
-        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 
@@ -116,7 +124,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("date", "datetime", DataType.DATETIME, true, 0);
-        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
 
     }
@@ -132,7 +140,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("isTradenet", "boolean", DataType.BOOLEAN, true, 0);
-        List<KeyValue> actual = UpdateService.readFromExcel(path, tableName, targetColumn);
+        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 
@@ -168,7 +176,7 @@ public class UtilServiceTest {
         String targetTableName = "address_16102016_05_39";
         String columnName = "address";
 
-        boolean passed = UpdateService.checkForUpdate3(tableName, columnName, targetTableName, check, 4);
+        boolean passed = UpdateService.checkForUpdate3(tableName, columnName, targetTableName, check);
         assertTrue(passed);
     }
 
@@ -180,7 +188,7 @@ public class UtilServiceTest {
         String columnName = "regionid";
         String columnTargetName = "regionid";
 
-        boolean passed = UpdateService.updateData(tableName, columnName, targetTableName, columnTargetName);
+        boolean passed = UpdateService.updateDataFromTempToTarget(tableName, columnName, targetTableName, columnTargetName);
         assertTrue(passed);
     }*/
 

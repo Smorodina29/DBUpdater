@@ -71,7 +71,7 @@ public class UpdateService {
 
     public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
         List<String> columnNames = getTableColumns(tableName, forUpdate);
-        System.out.println("Columns for \'" + tableName + "\':" + columnNames);
+        System.out.println("Columns for export: \'" + tableName + "\':" + columnNames + ". For_update:" + forUpdate);
         HSSFWorkbook book = new HSSFWorkbook();
         HSSFSheet sheet = book.createSheet(tableName);
         HSSFRow row = sheet.createRow(0);
@@ -181,7 +181,7 @@ public class UpdateService {
         }
     }
 
-    public static ArrayList<KeyValue> readFromExcel(String path, String tableName, Column targetColumn) {
+    public static ArrayList<KeyValue> readForUpdate(String path, String tableName, Column targetColumn) {
         ArrayList<KeyValue> result = new ArrayList<KeyValue>();
         /*
          HSSFRow row = sheet.getRow(0);
@@ -242,18 +242,18 @@ public class UpdateService {
                 if (row == null) continue;//skip empty row
 
                 HSSFCell idCell = row.getCell(idX);
-                HSSFCell resCell = row.getCell(res);
+                HSSFCell targetCell = row.getCell(res);
 
-                int cellType = resCell != null ? resCell.getCellType() : -1;
+                int cellType = targetCell != null ? targetCell.getCellType() : -1;
                 System.out.println("cell [" + res + ", " + y + "] type=" + cellType);
 
                 boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > 0;
                 if (hasIdValue) {
                     int id = (int) (idCell.getNumericCellValue());
-                    KeyValue kv = getCellValue(id, resCell, targetColumn, res, y);
+                    KeyValue kv = getCellValue(id, targetCell, targetColumn, res, y);
                     System.out.println("kv=" + kv);
                     result.add(kv);
-                } else if (resCell!=null && resCell.getStringCellValue()== null){
+                } else if (targetCell!=null && targetCell.getStringCellValue()== null){
                     throw new RuntimeException("Row with index #" + y  + " is empty");
                 }
             }
@@ -334,18 +334,20 @@ public class UpdateService {
         return Utils.allowedDataTypesPairs.contains(new Pair<>(cellType, dataType));
     }
 
-    public static boolean checkForUpdate1(String tableName, String columnName, String targetTableName, RowCountCheck check) {
+    public static boolean checkForUpdate1(String tableName, String columnName, String tempTableName, RowCountCheck check) {
         boolean result = false;
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
 
-            String query1 = String.format(check.getSql1(), targetTableName);
+            String query1 = String.format(check.getSql1(), tempTableName);
+            System.out.println("Query-1:" + query1);
             ResultSet rs1 = statement.executeQuery(query1);
             rs1.next();
             int coun1 =  rs1.getInt(1);
 
-            String query2 = String.format(check.getSql1(), targetTableName);
+            String query2 = String.format(check.getSql2(), tempTableName);
+            System.out.println("Query-2:" + query2);
             ResultSet rs2 = statement.executeQuery(query2);
             rs2.next();
             int coun2 =  rs2.getInt(1);
@@ -358,12 +360,13 @@ public class UpdateService {
         return result;
     }
 
-    public static boolean checkForUpdate2(String tableName, String columnName, String targetTableName, UniqueRowsCheck check, long numberOfRows) {
+    public static boolean checkForUpdate2(String targetTableName, String columnName, String tempTableName, UniqueRowsCheck check, long numberOfRows) {
         boolean result = false;
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String query1 = String.format(check.getSql(), targetTableName, tableName, columnName, columnName);
+            String query1 = String.format(check.getSql(), tempTableName, targetTableName, columnName, columnName);
+            System.out.println("Query:" + query1);
             ResultSet rs1 = statement.executeQuery(query1);
             rs1.next();
             int coun1 =  rs1.getInt(1);
@@ -377,12 +380,13 @@ public class UpdateService {
         return result;
     }
 
-    public static boolean checkForUpdate3(String tableName, String columnName, String targetTableName, PresentRowsCheck check, long numberOfRows) {
+    public static boolean checkForUpdate3(String tableName, String columnName, String targetTableName, PresentRowsCheck check) {
         boolean result = false;
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
             String query = String.format(check.getSql(), targetTableName, tableName, columnName, columnName);
+            System.out.println("Query:" + query);
             ResultSet rs = statement.executeQuery(query);
             rs.next();
             int count =  rs.getInt(1);
@@ -396,14 +400,14 @@ public class UpdateService {
         return result;
     }
 
-    public static boolean updateData(String tableName, String columnName, String targetTableName, String columnTargetName) {
-        boolean result = false;
+    public static int updateDataFromTempToTarget(String targetTableName, String targetColumnName, String tempTableName, String tempColumnName) {
+        int result = 0;
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String query = String.format("update %s set %s = u.%s from %s u join %s s on u.id = s.id", tableName, columnName, columnName, targetTableName, columnTargetName);
-            statement.executeUpdate(query);
-            result = true;
+            String query = String.format("update %s set %s = u.%s from %s u join %s s on u.id = s.id", targetTableName, targetColumnName, targetColumnName, tempTableName, tempColumnName);
+            System.out.println("Query for update: `" + query + "\'");
+            result = statement.executeUpdate(query);
         } catch (SQLException e) {
             System.out.println("Error:" + e);
         } finally {
@@ -708,6 +712,15 @@ public class UpdateService {
             sb.append("?");
         }
         return sb.toString();
+    }
+
+    public static Column findColumn(String columnName, List<Column> columns) {
+        for (Column column : columns) {
+            if (columnName.equalsIgnoreCase(column.name)) {
+                return column;
+            }
+        }
+        return null;
     }
 }
 
