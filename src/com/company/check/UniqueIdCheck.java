@@ -3,10 +3,11 @@ package com.company.check;
 /**
  * Created by Александр on 18.12.2016.
  */
-public class UniqueRowsCheck extends AllValidationCheck {
+public class UniqueIdCheck extends AllValidationCheck {
     //error
-    String sql = "select count(*) from %s u left join %s a on a.%s = u.%s";
-    private String name = "Проверка на уникальность записей.";
+    String sql = "select count(distinct id) from %s";
+
+    String name = "Проверка на уникальность ID во временной таблице.";
 
     @Override
     public String getSql() {
@@ -22,5 +23,4 @@ public class UniqueRowsCheck extends AllValidationCheck {
     public String getName() {
         return name;
     }
-
 }

@@ -1,14 +1,13 @@
 package com.company;
 
-import com.company.check.PresentRowsCheck;
-import com.company.check.RowCountCheck;
-import com.company.check.UniqueRowsCheck;
+import com.company.check.*;
 import com.company.data.*;
 import org.junit.Test;
 
 import java.sql.SQLException;
 import java.util.*;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -146,12 +145,12 @@ public class UtilServiceTest {
 
     @Test
     public void updateScriptTest() {
-        RowCountCheck check = new RowCountCheck();
+        UniqueIdCheck check = new UniqueIdCheck();
         String tableName = "address";
         String targetTableName = "address_16102016_05_39";
         String columnName = "address";
 
-        boolean passed = UpdateService.checkForUpdate1(tableName, columnName, targetTableName, check);
+        boolean passed = UpdateService.checkForUpdate(tableName, columnName, targetTableName, check,4);
         assertTrue(passed);
     }
 
@@ -164,7 +163,7 @@ public class UtilServiceTest {
         String targetTableName = "address_16102016_05_39";
         String columnName = "address";
 
-        boolean passed = UpdateService.checkForUpdate2(tableName, columnName, targetTableName, check, 4);
+        boolean passed = UpdateService.checkForUpdate(tableName, columnName, targetTableName, check, 4);
         assertTrue(passed);
     }
 
@@ -176,21 +175,9 @@ public class UtilServiceTest {
         String targetTableName = "address_16102016_05_39";
         String columnName = "address";
 
-        boolean passed = UpdateService.checkForUpdate3(tableName, columnName, targetTableName, check);
+        boolean passed = UpdateService.checkForUpdate(tableName, columnName, targetTableName, check, 4);
         assertTrue(passed);
     }
-
-    /*@Test
-    public  void updateTest() {
-
-        String tableName = "address";
-        String targetTableName = "address_16102016_05_39";
-        String columnName = "regionid";
-        String columnTargetName = "regionid";
-
-        boolean passed = UpdateService.updateDataFromTempToTarget(tableName, columnName, targetTableName, columnTargetName);
-        assertTrue(passed);
-    }*/
 
     @Test
     public void filterColumnsForUpdate() {

@@ -2,10 +2,7 @@ package com.company.ui;
 
 import com.company.Column;
 import com.company.UpdateService;
-import com.company.check.CheckException;
-import com.company.check.PresentRowsCheck;
-import com.company.check.RowCountCheck;
-import com.company.check.UniqueRowsCheck;
+import com.company.check.*;
 import com.company.data.FloatKeyValue;
 import com.company.data.KeyValue;
 
@@ -59,8 +56,6 @@ public class SwingInterface extends JFrame {
                 System.out.println("Table " + targetTable + " has columns for update: " + columnNames);
                 columnsCombobox.removeAllItems();
 
-
-
                 for (String columnName : columnNames) {
                     columnsCombobox.addItem(columnName);
                 }
@@ -106,30 +101,26 @@ public class SwingInterface extends JFrame {
 
                         System.out.println("Start checking tables!");
 
-                        //todo finish checks
+                        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName, targetColumnName);
 
-                        RowCountCheck check1 = new RowCountCheck();
-                        boolean passed1 = UpdateService.checkForUpdate1(targetTableName, targetColumnName, tempTableName, check1);
-                        System.out.println("Check:" + check1.getName() + " PASSED:" + passed1);
-                        if (!passed1) {
-                            throw new CheckException(check1.getName());
+                        System.out.println("Found checks:" + checks);
+
+                        for (Check check : checks) {
+                            boolean passed = UpdateService.checkForUpdate(targetTableName, targetColumnName, tempTableName, check, updateRowsCount);
+                            if (!passed) {
+                                switch (check.getType()) {
+                                    case ERROR:
+                                        throw new CheckException(check.getName());
+                                    case WARNING:
+                                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                                        break;
+                                    default:
+                                        throw new RuntimeException("Unknown check type:" + check.getType());
+                                }
+                            } else {
+                                System.out.println("Passed:" + check.getName());
+                            }
                         }
-                        UniqueRowsCheck check2 = new UniqueRowsCheck();
-
-                        boolean passed2 = UpdateService.checkForUpdate2(targetTableName, targetColumnName, tempTableName, check2, updateRowsCount);
-                        System.out.println("Check:" + check2.getName() + " PASSED:" + passed2);
-                        if (!passed2) {
-                            throw new CheckException(check2.getName());
-                        }
-
-                        PresentRowsCheck check3 = new PresentRowsCheck();
-                        boolean passed3 = UpdateService.checkForUpdate3(targetTableName, targetColumnName, tempTableName, check3);
-                        System.out.println("Check:" + check3.getName() + " PASSED:" + passed3);
-
-                        if (!passed3) {
-                            JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check3.getName(),"InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
-                        }
-
                         int affected = UpdateService.updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName, targetColumnName);
                         if (affected > 0) {
                             JOptionPane.showMessageDialog(null, "Обновлено " + updateRowsCount + " записей в таблице " + targetTableName, "InfoBox: Обновление.", JOptionPane.INFORMATION_MESSAGE);
