@@ -17,6 +17,11 @@ public class RefExistenceCheck extends AllValidationCheck {
     }
 
     @Override
+    public String getSqlQuery(String tempTableName, String targetTableName, String columnName) {
+        return String.format(sql, tempTableName, targetTableName, columnName, columnName);
+    }
+
+    @Override
     public String getSql() {
         return sql;
     }

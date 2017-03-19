@@ -10,6 +10,11 @@ public class PresentRowsCheck extends ZeroValidationCheck {
     private String name = "Некоторые записи уже имеют целевое значение.";
 
     @Override
+    public String getSqlQuery(String tempTableName, String targetTableName, String columnName) {
+        return String.format(sql, tempTableName, targetTableName, columnName, columnName);
+    }
+
+    @Override
     public String getSql() {
         return sql;
     }

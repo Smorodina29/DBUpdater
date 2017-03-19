@@ -1,9 +1,6 @@
 package com.company;
 
 import com.company.check.Check;
-import com.company.check.PresentRowsCheck;
-import com.company.check.UniqueIdCheck;
-import com.company.check.UniqueRowsCheck;
 import com.company.data.*;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -341,54 +338,12 @@ public class UpdateService {
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
 
-            String query = String.format(check.getSql(), tempTableName, targetTableName, columnName, columnName);
+            String query = check.getSqlQuery(tempTableName, targetTableName, columnName);
             System.out.println("Query:" + query);
             ResultSet rs = statement.executeQuery(query);
             rs.next();
             int count =  rs.getInt(1);
             result = check.validate(count, numberOfRows);
-        } catch (SQLException e) {
-            System.out.println("Error:" + e);
-        } finally {
-            Utils.closeQuietly(statement);
-        }
-        return result;
-    }
-
-    @Deprecated
-    public static boolean checkForUpdate2(String targetTableName, String columnName, String tempTableName, UniqueRowsCheck check, long numberOfRows) {
-        boolean result = false;
-        Statement statement = null;
-        try {
-            statement = ConnectionProvider.get().getConnection().createStatement();
-            String query1 = String.format(check.getSql(), tempTableName, targetTableName, columnName, columnName);//todo move format to check
-            System.out.println("Query:" + query1);
-            ResultSet rs1 = statement.executeQuery(query1);
-            rs1.next();
-            int coun1 =  rs1.getInt(1);
-            System.out.println("count=" + coun1);
-            result = coun1 == numberOfRows;
-        } catch (SQLException e) {
-            System.out.println("Error:" + e);
-        } finally {
-            Utils.closeQuietly(statement);
-        }
-        return result;
-    }
-
-    @Deprecated
-    public static boolean checkForUpdate3(String tableName, String columnName, String targetTableName, PresentRowsCheck check) {
-        boolean result = false;
-        Statement statement = null;
-        try {
-            statement = ConnectionProvider.get().getConnection().createStatement();
-            String query = String.format(check.getSql(), targetTableName, tableName, columnName, columnName);
-            System.out.println("Query:" + query);
-            ResultSet rs = statement.executeQuery(query);
-            rs.next();
-            int count =  rs.getInt(1);
-            System.out.println("count=" + count);
-            result = count == 0;
         } catch (SQLException e) {
             System.out.println("Error:" + e);
         } finally {

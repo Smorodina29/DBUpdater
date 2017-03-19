@@ -2,6 +2,7 @@ package com.company;
 
 import com.company.check.*;
 import com.company.data.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.SQLException;

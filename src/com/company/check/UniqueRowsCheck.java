@@ -9,6 +9,11 @@ public class UniqueRowsCheck extends AllValidationCheck {
     private String name = "Проверка на уникальность записей.";
 
     @Override
+    public String getSqlQuery(String tempTableName, String targetTableName, String columnName) {
+        return String.format(sql, tempTableName, targetTableName, columnName, columnName);
+    }
+
+    @Override
     public String getSql() {
         return sql;
     }

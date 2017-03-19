@@ -6,6 +6,7 @@ package com.company.check;
 public abstract class Check {
     public abstract CheckType getType();
     public abstract String getName();
+    public abstract String getSqlQuery(String tempTableName, String targetTableName, String columnName);
     public abstract String getSql();
 
     @Override

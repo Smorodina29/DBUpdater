@@ -10,6 +10,11 @@ public class UniqueIdCheck extends AllValidationCheck {
     String name = "Проверка на уникальность ID во временной таблице.";
 
     @Override
+    public String getSqlQuery(String tempTableName, String targetTableName, String columnName) {
+        return String.format(sql, tempTableName);
+    }
+
+    @Override
     public String getSql() {
         return sql;
     }
