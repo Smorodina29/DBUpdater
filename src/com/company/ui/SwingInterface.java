@@ -17,10 +17,11 @@ import java.util.List;
 
 
 /**
- * Created by Александр on 26.02.2017.
+ *  Created by Александр on 26.02.2017.
  */
 public class SwingInterface extends JFrame {
-    public  SwingInterface() {
+
+    private SwingInterface() {
         setTitle("Update data");
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -209,7 +210,7 @@ public class SwingInterface extends JFrame {
                                     case ERROR:
                                         throw new CheckException(check.getName());
                                     case WARNING:
-                                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Добавление.", JOptionPane.WARNING_MESSAGE);
                                         break;
                                     default:
                                         throw new RuntimeException("Unknown check type:" + check.getType());
@@ -263,7 +264,7 @@ public class SwingInterface extends JFrame {
 
     public static void main(String[] args) {
         SwingInterface tp = new SwingInterface();
-        tp.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        tp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         tp.setVisible(true);
     }
 }
