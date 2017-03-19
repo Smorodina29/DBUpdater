@@ -103,6 +103,9 @@ public class SwingInterface extends JFrame {
 
                         List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName, targetColumnName);
 
+                        if (checks == null || checks.isEmpty()) {
+                            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
+                        }
                         System.out.println("Found checks:" + checks);
 
                         for (Check check : checks) {
@@ -192,13 +195,40 @@ public class SwingInterface extends JFrame {
                     String tempTableName = UpdateService.createTempTable(targetTableName, columns);
                     try {
                         UpdateService.fillTable(tempTableName, data);
-                        //todo add checks
+
+                        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName);
+                        if (checks == null || checks.isEmpty()) {
+                            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
+                        }
+                        System.out.println("Found checks:" + checks);
+
+                        for (Check check : checks) {
+                            boolean passed = UpdateService.checkForUpdate(targetTableName, null, tempTableName, check,data.size());
+                            if (!passed) {
+                                switch (check.getType()) {
+                                    case ERROR:
+                                        throw new CheckException(check.getName());
+                                    case WARNING:
+                                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                                        break;
+                                    default:
+                                        throw new RuntimeException("Unknown check type:" + check.getType());
+                                }
+                            } else {
+                                System.out.println("Passed:" + check.getName());
+                            }
+                        }
+
                         int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
 
                         JOptionPane.showMessageDialog(null, "Добавлено " + affected + " записей в таблицу " + targetTableName, "InfoBox: Добавление.", JOptionPane.INFORMATION_MESSAGE);
 
                     } catch (SQLException e1) {
                         System.out.println("Error: " + e1.getMessage());
+                        e1.printStackTrace();
+                    } catch (CheckException e1) {
+                        System.out.println("Error: " + e1.getMessage());
+                        JOptionPane.showMessageDialog(null, "Не удалось добавить записи в таблице. Не прошла проверка: " + e1.getMessage(), "InfoBox: Добавление.", JOptionPane.ERROR_MESSAGE);
                         e1.printStackTrace();
                     }
                 }
