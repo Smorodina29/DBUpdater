@@ -1,10 +1,7 @@
 package com.company.ui;
 
-import com.company.Column;
 import com.company.UpdateService;
 import com.company.check.*;
-import com.company.data.FloatKeyValue;
-import com.company.data.KeyValue;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -12,7 +9,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
-import java.util.*;
 import java.util.List;
 
 
@@ -82,52 +78,11 @@ public class SwingInterface extends JFrame {
                     String path = chooser.getSelectedFile().getAbsolutePath();
                     String targetTableName = tablesForUpdateBox.getItemAt(tablesForUpdateBox.getSelectedIndex());
                     String targetColumnName = columnsCombobox.getItemAt(columnsCombobox.getSelectedIndex());
-                    List<Column> columns = UpdateService.filterForUpdate(UpdateService.getTableStructure(targetTableName), targetColumnName);
-                    Column targetColumn = UpdateService.findColumn(targetColumnName, columns);
-                    Column idColumn = UpdateService.findColumn("id", columns);
-                    ArrayList<KeyValue> keyValues = UpdateService.readForUpdate(path, targetTableName, targetColumn);
-                    int updateRowsCount = keyValues.size();
 
-                    ArrayList<Map<Column, KeyValue>> data = new ArrayList<>();
-
-                    for (KeyValue keyValue : keyValues) {
-                        HashMap<Column, KeyValue> map = new HashMap<>();
-                        map.put(idColumn, new FloatKeyValue((float) keyValue.key));//todo refactor this ugly code
-                        map.put(targetColumn, keyValue);
-                        data.add(map);
-                    }
-                    String tempTableName = UpdateService.createTempTable(targetTableName, columns);
                     try {
-                        UpdateService.fillTable(tempTableName, data);
-
-                        System.out.println("Start checking tables!");
-
-                        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName, targetColumnName);
-
-                        if (checks == null || checks.isEmpty()) {
-                            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
-                        }
-                        System.out.println("Found checks:" + checks);
-
-                        for (Check check : checks) {
-                            boolean passed = UpdateService.checkForUpdate(targetTableName, targetColumnName, tempTableName, check, updateRowsCount);
-                            if (!passed) {
-                                switch (check.getType()) {
-                                    case ERROR:
-                                        throw new CheckException(check.getName());
-                                    case WARNING:
-                                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
-                                        break;
-                                    default:
-                                        throw new RuntimeException("Unknown check type:" + check.getType());
-                                }
-                            } else {
-                                System.out.println("Passed:" + check.getName());
-                            }
-                        }
-                        int affected = UpdateService.updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName, targetColumnName);
+                        int affected = UpdateService.importAndUpdate(path, targetTableName, targetColumnName);
                         if (affected > 0) {
-                            JOptionPane.showMessageDialog(null, "Обновлено " + updateRowsCount + " записей в таблице " + targetTableName, "InfoBox: Обновление.", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Обновлено " + affected + " записей в таблице " + targetTableName, "InfoBox: Обновление.", JOptionPane.INFORMATION_MESSAGE);
                         } else {
                             JOptionPane.showMessageDialog(null, "Ни одна запись не была обновлена в таблице " + targetTableName + ".", "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
                         }
@@ -190,40 +145,10 @@ public class SwingInterface extends JFrame {
                 if (chooser.showOpenDialog(SwingInterface.this) == JFileChooser.APPROVE_OPTION){
                     String path = chooser.getSelectedFile().getAbsolutePath();
                     String targetTableName = tablesCombobox.getItemAt(tablesCombobox.getSelectedIndex());
-                    List<Column> columns = UpdateService.filterForAdd(UpdateService.getTableStructure(targetTableName));
-                    List<Map<Column, KeyValue>> data = UpdateService.readForAdd(path, targetTableName, columns);
 
-                    String tempTableName = UpdateService.createTempTable(targetTableName, columns);
                     try {
-                        UpdateService.fillTable(tempTableName, data);
-
-                        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName);
-                        if (checks == null || checks.isEmpty()) {
-                            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
-                        }
-                        System.out.println("Found checks:" + checks);
-
-                        for (Check check : checks) {
-                            boolean passed = UpdateService.checkForUpdate(targetTableName, null, tempTableName, check,data.size());
-                            if (!passed) {
-                                switch (check.getType()) {
-                                    case ERROR:
-                                        throw new CheckException(check.getName());
-                                    case WARNING:
-                                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Добавление.", JOptionPane.WARNING_MESSAGE);
-                                        break;
-                                    default:
-                                        throw new RuntimeException("Unknown check type:" + check.getType());
-                                }
-                            } else {
-                                System.out.println("Passed:" + check.getName());
-                            }
-                        }
-
-                        int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
-
+                        int affected = UpdateService.importData(path, targetTableName);
                         JOptionPane.showMessageDialog(null, "Добавлено " + affected + " записей в таблицу " + targetTableName, "InfoBox: Добавление.", JOptionPane.INFORMATION_MESSAGE);
-
                     } catch (SQLException e1) {
                         System.out.println("Error: " + e1.getMessage());
                         e1.printStackTrace();

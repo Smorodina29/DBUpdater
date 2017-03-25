@@ -2,7 +2,6 @@ package com.company;
 
 import com.company.check.*;
 import com.company.data.*;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -93,7 +92,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("address", "varchar", DataType.VARCHAR, false, 50);
-        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
+        List<KeyValue> actual = FileService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 
@@ -108,7 +107,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("regionid", "int", DataType.FLOAT, true, 0);
-        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
+        List<KeyValue> actual = FileService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 
@@ -124,7 +123,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("date", "datetime", DataType.DATETIME, true, 0);
-        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
+        List<KeyValue> actual = FileService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
 
     }
@@ -140,7 +139,7 @@ public class UtilServiceTest {
         String tableName = "address";
         String path = "test/resources/address.xls";
         Column targetColumn = new Column("isTradenet", "boolean", DataType.BOOLEAN, true, 0);
-        List<KeyValue> actual = UpdateService.readForUpdate(path, tableName, targetColumn);
+        List<KeyValue> actual = FileService.readForUpdate(path, tableName, targetColumn);
         assertEquals(expected, actual);
     }
 
@@ -258,7 +257,7 @@ public class UtilServiceTest {
         for (Column column : targetColumns) {
             System.out.println("target:" + column);
         }
-        List<Map<Column, KeyValue>> actual = UpdateService.readForAdd(path, tableName, targetColumns);
+        List<Map<Column, KeyValue>> actual = FileService.readForAdd(path, tableName, targetColumns);
         assertEquals(expected, actual);
     }
 

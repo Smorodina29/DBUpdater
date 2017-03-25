@@ -1,28 +1,29 @@
 package com.company;
 
 import com.company.check.Check;
+import com.company.check.CheckException;
+import com.company.check.ChecksHolder;
 import com.company.data.*;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
 
+import javax.swing.*;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Александр on 17.07.2016.
  */
 public class UpdateService {
+
     public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm_ss");
-    public  static  final SimpleDateFormat dateColumnFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public static List<String> getTableNamesForUpdate() {
         ArrayList<String> tablesForUpdate = new ArrayList<String>();
@@ -42,7 +43,6 @@ public class UpdateService {
         }
         return tablesForUpdate;
     }
-
 
     public static List<String> getTableColumns(String tableName, boolean forUpdate) {
         ArrayList<String> columnNames = new ArrayList<String>();
@@ -66,13 +66,11 @@ public class UpdateService {
         return columnNames;
     }
 
-
     public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
         List<String> columnNames = getTableColumns(tableName, forUpdate);
         System.out.println("Columns for export: \'" + tableName + "\':" + columnNames + ". For_update:" + forUpdate);
         HSSFWorkbook book = new HSSFWorkbook();
-        HSSFSheet sheet = book.createSheet(tableName);
-        HSSFRow row = sheet.createRow(0);
+        HSSFRow row = book.createSheet(tableName).createRow(0);
         for (int i = 0; i < columnNames.size(); i++) {
             String columnName = columnNames.get(i);
             HSSFCell cell = row.createCell(i);
@@ -125,7 +123,7 @@ public class UpdateService {
         String tempTableName = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            tempTableName = tableName + "_" + sdf.format(new Date());
+            tempTableName = tableName + "_" + sdf.format(new java.util.Date());
 
             StringBuilder cols = new StringBuilder();
             for (int i = 0; i<structure.size(); i++) {
@@ -177,159 +175,6 @@ public class UpdateService {
             Utils.closeQuietly(ps);
             Utils.closeQuietly(connection);
         }
-    }
-
-    public static ArrayList<KeyValue> readForUpdate(String path, String tableName, Column targetColumn) {
-        ArrayList<KeyValue> result = new ArrayList<KeyValue>();
-        /*
-         HSSFRow row = sheet.getRow(0);
-         int id = (int)row.getCell(0).getNumericCellValue();
-            String name = row.getCell(1).getStringCellValue();
-            int regionid = (int)row.getCell(2).getNumericCellValue();
-            Address address = new Address(id, name, regionid);
-
-            result.add(address);
-        * */
-
-        try {
-            HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(path));
-            HSSFSheet sheet = myExcelBook.getSheetAt(0);
-
-            System.out.println("FirstRow=" + sheet.getFirstRowNum() + ", LastRow=" + sheet.getLastRowNum() + ", PhysicalNumber=" + sheet.getPhysicalNumberOfRows());
-            int x = 0; //x - current column
-//            int row = 0;
-            int idX = -1; //idX
-            int res = -1; //res - target name of column
-            HSSFRow row = sheet.getRow(0);
-
-            int lastX = row.getLastCellNum(); //last column
-            System.out.println("LastX=" + lastX);
-
-            //search for id and target column indexes
-            for (; x < lastX; x++) {
-                System.out.println("x="+x);
-                HSSFCell cell = row.getCell(x);
-
-                if (cell == null) throw new RuntimeException("Empty header at index " + x);
-
-                String currentHeaderName = cell.getStringCellValue(); //current value of cell
-                if ("id".equalsIgnoreCase(currentHeaderName)) {
-                    if (idX > -1) {
-                        throw new RuntimeException("Two ID columns");
-                    } else {
-                        idX = x;
-                    }
-                }
-                if (targetColumn.name.equalsIgnoreCase(currentHeaderName)) {
-                    if (res>-1) {
-                        throw new RuntimeException("Two target columns");
-                    }
-                    else {
-                        res = x;
-                    }
-                }
-            }
-            if (idX == -1 && res == -1) {
-                throw new RuntimeException("Id column or target not found. idx=" + idX + ", res=" + res);
-            }
-            int lastrow = sheet.getLastRowNum();
-            int y = 1; //index of row
-
-            for (; y<=lastrow; y++) {
-                row = sheet.getRow(y);
-                if (row == null) continue;//skip empty row
-
-                HSSFCell idCell = row.getCell(idX);
-                HSSFCell targetCell = row.getCell(res);
-
-                int cellType = targetCell != null ? targetCell.getCellType() : -1;
-                System.out.println("cell [" + res + ", " + y + "] type=" + cellType);
-
-                boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > 0;
-                if (hasIdValue) {
-                    int id = (int) (idCell.getNumericCellValue());
-                    KeyValue kv = getCellValue(id, targetCell, targetColumn, res, y);
-                    System.out.println("kv=" + kv);
-                    result.add(kv);
-                } else if (targetCell!=null && targetCell.getStringCellValue()== null){
-                    throw new RuntimeException("Row with index #" + y  + " is empty");
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return result;
-    }
-
-    private static KeyValue getCellValue(int key, HSSFCell cell, Column column, int x, int y) {
-        boolean isEmptyCell = cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK;
-        if (isEmptyCell) {
-            if (!column.isNullable) {
-                throw new RuntimeException("Cell[" + x + ", " + y + "] is not nullable.");
-            }
-            return createEmptyKeyValue(key, column);
-        }
-
-        int cellType = cell.getCellType();
-        if (!correctType(cellType, column.dataType)) {
-            throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
-        }
-
-        KeyValue result;
-        switch (column.dataType) {
-            case VARCHAR:
-                result = new StringKeyValue(key, cell.getStringCellValue());
-                break;
-            case FLOAT:
-                result = new FloatKeyValue(key, (float) cell.getNumericCellValue());
-                break;
-            case DATETIME:
-                result = new DateKeyValue(key, cell.getDateCellValue());
-                break;
-            case BOOLEAN:
-                String strBool = cell.getStringCellValue();
-                boolean value;
-                if ("true".equalsIgnoreCase(strBool)){
-                    value = true;
-                } else if ("false".equalsIgnoreCase(strBool)) {
-                    value = false;
-                } else {
-                    throw new RuntimeException("Cell[" + x + ", " + y + "] is not correct boolean value=`" + strBool + "\'");
-                }
-                result = new BooleanKeyValue(key, value);
-                break;
-            default:
-                throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to expected(" + column.dataType + ")");
-        }
-
-        return result;
-    }
-
-    private static KeyValue createEmptyKeyValue(int id, Column column) {
-        KeyValue result;
-        switch (column.dataType) {
-            case FLOAT:
-                result = new FloatKeyValue(id, null);
-                break;
-            case VARCHAR:
-                result = new StringKeyValue(id, null);
-                break;
-            case BOOLEAN:
-                result = new BooleanKeyValue(id, null);
-                break;
-            case DATETIME:
-                result = new DateKeyValue(id, null);
-                break;
-            default:
-                throw new RuntimeException("Unsupported type `" + column + "'!");
-        }
-        return result;
-    }
-
-    private static boolean correctType(int cellType, DataType dataType) {
-        return Utils.allowedDataTypesPairs.contains(new Pair<>(cellType, dataType));
     }
 
     public static boolean checkForUpdate(String targetTableName, String columnName, String tempTableName, Check check, long numberOfRows) {
@@ -389,152 +234,6 @@ public class UpdateService {
         }
         //maybe check result size equal for columns.length-1
         return list;
-    }
-
-    public static List<Map<Column, KeyValue>> readForAdd(String filepath, String tableName, List<Column> targetColumns) {
-        ArrayList<Map<Column, KeyValue>> result = new ArrayList<>();
-
-        try {
-            HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(filepath));
-            HSSFSheet sheet = myExcelBook.getSheetAt(0);
-
-            System.out.println("FirstRow=" + sheet.getFirstRowNum() + ", LastRow=" + sheet.getLastRowNum() + ", PhysicalNumber=" + sheet.getPhysicalNumberOfRows());
-
-            HSSFRow row = sheet.getRow(0);
-            int lastX = row.getLastCellNum(); //last column
-            System.out.println("LastX=" + lastX);
-
-            List<Column> present = new ArrayList<>();
-            Map<Column, Integer> col2indexMap = new HashMap<>();
-            //search for columns
-            int x = 0; //x - current column
-            for (; x < lastX; x++) {
-                System.out.println("x="+x);
-                HSSFCell cell = row.getCell(x);
-
-                if (cell == null) throw new RuntimeException("Empty header at index " + x);
-
-                String currentHeaderName = cell.getStringCellValue(); //current value of cell
-                Column found = findColumnBy(currentHeaderName, targetColumns);
-
-                if (found == null) {
-//                    throw new Exception("Found column with illegal name \'" + currentHeaderName + "\'");
-                    System.out.println("Skipped column `" + currentHeaderName + "\'");
-                    continue;
-                }
-
-                if (present.contains(found)) {
-                    throw new Exception("Found duplicate column with name \'" + currentHeaderName + "\'");
-                }
-
-                present.add(found);
-                col2indexMap.put(found, x);
-            }
-
-            List<Column> mustPresent = filterNotNullable(targetColumns);
-            if (present.isEmpty()) {
-                String names = Utils.mkString(mustPresent);
-                throw new RuntimeException("No columns found in file. Must present: " + names + ".");
-            }
-
-            if (!present.containsAll(mustPresent)) {
-                String names = Utils.mkString(mustPresent);
-                throw new Exception("One or more not nullable columns are not present. Must present: " + names + ".");
-            }
-
-            System.out.println("Columns that are present:");
-            for (Column column : present) {
-                System.out.println(column + " index=" + col2indexMap.get(column));
-            }
-
-            //reading from file
-            int lastrow = sheet.getLastRowNum();
-            int y = 1; //index of row
-
-            for (; y<=lastrow; y++) {
-                row = sheet.getRow(y);
-                if (row == null) continue;//skip empty row
-
-                HashMap<Column, KeyValue> rowData = new HashMap<>();
-
-                for (Column column : present) {
-                    Integer indexOfColumnInRow = col2indexMap.get(column);
-                    HSSFCell cell = row.getCell(indexOfColumnInRow);
-
-                    int cellType = cell != null ? cell.getCellType() : -1;
-                    System.out.println("cell [" + indexOfColumnInRow + ", " + y + "] type=" + cellType);
-                    rowData.put(column, getCellValue(cell, column, indexOfColumnInRow, y));
-                }
-
-                result.add(rowData);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return result;//может возвращать еще колонки, которые присутствуют в файле?
-    }
-
-    private static KeyValue getCellValue(HSSFCell cell, Column column, int x, int y) {
-        boolean isEmptyCell = cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK;
-        if (isEmptyCell) {
-            if (!column.isNullable) {
-                throw new RuntimeException("Cell[" + x + ", " + y + "] is not nullable.");
-            }
-            return null;
-        }
-
-        int cellType = cell.getCellType();
-        if (!correctType(cellType, column.dataType)) {
-            throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to dataType(" + column.dataType + ")");
-        }
-
-        KeyValue result;
-        switch (column.dataType) {
-            case VARCHAR:
-                result = new StringKeyValue(cell.getStringCellValue());
-                break;
-            case FLOAT:
-                result = new FloatKeyValue((float) cell.getNumericCellValue());
-                break;
-            case DATETIME:
-                result = new DateKeyValue(cell.getDateCellValue());
-                break;
-            case BOOLEAN:
-                String strBool = cell.getStringCellValue();
-                boolean value;
-                if ("true".equalsIgnoreCase(strBool)) {
-                    value = true;
-                } else if ("false".equalsIgnoreCase(strBool)) {
-                    value = false;
-                } else {
-                    throw new RuntimeException("Cell[" + x + ", " + y + "] is not correct boolean value=`" + strBool + "\'");
-                }
-                result = new BooleanKeyValue(value);
-                break;
-            default:
-                throw new RuntimeException("Cell[" + x + ", " + y + "] type(" + cellType + ") does not correspond to expected(" + column.dataType + ")");
-        }
-
-        return result;
-    }
-
-    private static List<Column> filterNotNullable(List<Column> targetColumns) {
-        ArrayList<Column> list = new ArrayList<>();
-        for (Column column : targetColumns) {
-            if (!column.isNullable) {
-                list.add(column);
-            }
-        }
-        return list;
-    }
-
-    private static Column findColumnBy(String headerName, List<Column> columns) {
-        for (Column column : columns) {
-            if (column.name.equalsIgnoreCase(headerName)) {
-                return column;
-            }
-        }
-        return null;
     }
 
     public static void fillTable(String tableName, List<Map<Column, KeyValue>> data) throws SQLException {
@@ -673,6 +372,85 @@ public class UpdateService {
             }
         }
         return null;
+    }
+
+    public static int importData(String path, String targetTableName) throws SQLException, CheckException {
+        List<Column> columns = filterForAdd(getTableStructure(targetTableName));
+        List<Map<Column, KeyValue>> data = FileService.readForAdd(path, targetTableName, columns);
+        String tempTableName = createTempTable(targetTableName, columns);
+        fillTable(tempTableName, data);
+
+        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName);
+        if (checks == null || checks.isEmpty()) {
+            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
+        }
+        System.out.println("Found checks:" + checks);
+
+        for (Check check : checks) {
+            boolean passed = checkForUpdate(targetTableName, null, tempTableName, check,data.size());
+            if (!passed) {
+                switch (check.getType()) {
+                    case ERROR:
+                        throw new CheckException(check.getName());
+                    case WARNING:
+                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Добавление.", JOptionPane.WARNING_MESSAGE);//todo no GUI interactions!
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown check type:" + check.getType());
+                }
+            } else {
+                System.out.println("Passed:" + check.getName());
+            }
+        }
+
+        return addDataFromTempTable(targetTableName, tempTableName, columns);
+    }
+
+    public static int importAndUpdate(String path, String targetTableName, String targetColumnName) throws SQLException, CheckException {
+        List<Column> columns = filterForUpdate(getTableStructure(targetTableName), targetColumnName);
+
+        Column targetColumn = findColumn(targetColumnName, columns);
+        ArrayList<KeyValue> keyValues = FileService.readForUpdate(path, targetTableName, targetColumn);
+
+
+        ArrayList<Map<Column, KeyValue>> data = new ArrayList<>();
+
+        Column idColumn = findColumn("id", columns);
+        for (KeyValue keyValue : keyValues) {
+            HashMap<Column, KeyValue> map = new HashMap<>();
+            map.put(idColumn, new FloatKeyValue((float) keyValue.key));//todo refactor this ugly code
+            map.put(targetColumn, keyValue);
+            data.add(map);
+        }
+        String tempTableName = createTempTable(targetTableName, columns);
+        fillTable(tempTableName, data);
+
+        System.out.println("Start checking tables!");
+
+        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName, targetColumnName);
+
+        if (checks == null || checks.isEmpty()) {
+            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
+        }
+        System.out.println("Found checks:" + checks);
+        int updateRowsCount = keyValues.size();
+        for (Check check : checks) {
+            boolean passed = checkForUpdate(targetTableName, targetColumnName, tempTableName, check, updateRowsCount);
+            if (!passed) {
+                switch (check.getType()) {
+                    case ERROR:
+                        throw new CheckException(check.getName());
+                    case WARNING:
+                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown check type:" + check.getType());
+                }
+            } else {
+                System.out.println("Passed:" + check.getName());
+            }
+        }
+        return updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName, targetColumnName);
     }
 }
 
