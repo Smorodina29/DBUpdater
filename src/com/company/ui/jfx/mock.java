@@ -8,7 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class mock extends Application {
+public class Mock extends Application {
 
     public static void main(String[] args) {
         launch(args);
