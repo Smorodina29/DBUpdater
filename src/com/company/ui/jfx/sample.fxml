@@ -21,13 +21,13 @@
 <?import javafx.scene.layout.StackPane?>
 
 
-<BorderPane xmlns="http://javafx.com/javafx/null" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane xmlns="http://javafx.com/javafx/null" xmlns:fx="http://javafx.com/fxml/1" fx:id="root" fx:controller="com.company.ui.jfx.AppController">
    <center>
       <StackPane prefHeight="475.0" prefWidth="600.0">
           <children>
-              <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+              <TabPane fx:id="tabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
                   <tabs>
-                      <Tab text="Добавление">
+                      <Tab text="Добавление" fx:id="addTab">
                           <content>
                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                   <children>
@@ -50,7 +50,7 @@
                                                                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                                                   </rowConstraints>
                                                                   <children>
-                                                                      <Button mnemonicParsing="false" text="Загрузить файл" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                                      <Button mnemonicParsing="false" text="Загрузить файл" GridPane.columnIndex="1" GridPane.rowIndex="2"  onAction="#handleSubmitButtonAction"/>
                                                                       <Button mnemonicParsing="false" text="Выгрузить шаблон" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                                       <Label text="1) Выберите таблицу для добавления:">
                                                                           <padding>
@@ -119,7 +119,7 @@
                               </AnchorPane>
                           </content>
                       </Tab>
-                      <Tab text="Обновление">
+                      <Tab text="Обновление" fx:id="updateTab">
                           <content>
                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                   <children>
@@ -215,6 +215,18 @@
                                 </items>
                               </SplitPane>
                                   </children>
+                              </AnchorPane>
+                          </content>
+                      </Tab>
+                      <Tab text="Администрирование" fx:id="adminTab">
+                          <content>
+                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                              </AnchorPane>
+                          </content>
+                      </Tab>
+                      <Tab text="Настройки" fx:id="settingsTab">
+                          <content>
+                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                               </AnchorPane>
                           </content>
                       </Tab>

@@ -22,25 +22,28 @@ public class Mocka extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource("sample.fxml"));
+        Parent root = fxmlLoader.load();
         primaryStage.setTitle("Утилита импорта данных");
         primaryStage.setScene(new Scene(root, 600, 500));
-        primaryStage.show();
-
         Image e = new Image("icons/icon.png");
         primaryStage.getIcons().add(e);
+        AppController controller = fxmlLoader.<AppController>getController();
 
-        LoginDialog dialog = new LoginDialog();
 
-        dialog.initOwner(primaryStage);
-        dialog.initModality(Modality.APPLICATION_MODAL);
+        //start login
+        LoginDialog loginDialog = new LoginDialog();
+        loginDialog.initOwner(root.getScene().getWindow());
+        loginDialog.initModality(Modality.APPLICATION_MODAL);
 
-        dialog.open(new AuthenticationCallback() {
+        primaryStage.show();
+
+        loginDialog.open(new AuthenticationCallback() {
             @Override
             public void onAuth(boolean isAuthenticated, User user) {
                 if (isAuthenticated) {
                     System.out.println("Logged in as `" + user.getName() + "'(" + user.getRole() + ")");
-                    //set username to label
+                    controller.onUserLogin(user);
                 } else {
                     System.out.println("Cancelled authentication. Closing...");
                     Platform.exit();
