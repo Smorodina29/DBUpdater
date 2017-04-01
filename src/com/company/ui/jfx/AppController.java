@@ -1,39 +1,36 @@
 package com.company.ui.jfx;
 
-import com.company.ui.jfx.login.AuthenticationCallback;
-import com.company.ui.jfx.login.LoginDialog;
 import com.company.ui.jfx.login.Role;
 import com.company.ui.jfx.login.User;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
+import com.company.ui.jfx.tabs.AddDataController;
+import com.company.ui.jfx.tabs.AdministratorController;
+import com.company.ui.jfx.tabs.SettingsController;
+import com.company.ui.jfx.tabs.UpdateDataController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.Modality;
 
 import java.util.ArrayList;
 
 public class AppController {
 
-    public Tab addTab;
-    public Tab updateTab;
-    public Tab adminTab;
-    public Tab settingsTab;
-    public BorderPane root;
-    public TabPane tabPane;
+    @FXML public Tab addTab;
+    @FXML public Tab updateTab;
+    @FXML public Tab adminTab;
+    @FXML public Tab settingsTab;
+    @FXML public BorderPane root;
+    @FXML public TabPane tabPane;
+    @FXML public AddDataController addDataController;
+    @FXML public UpdateDataController updateDataController;
+    @FXML public AdministratorController administratorController;
+    @FXML public SettingsController settingsController;
     private ArrayList<Tab> adminTabs;
     private ArrayList<Tab> userTabs;
 
     public AppController() {
         System.out.println("Constructor called.");
     }
-
-    @FXML protected void handleSubmitButtonAction(ActionEvent event) {
-//        actiontarget.setText("Sign in button pressed");
-        System.out.println("handleSubmitButtonAction - " + event);
-    }
-
 
     /*
     *  Специальный метод с имененем FXMLLoader.INITIALIZE_METHOD_NAME
