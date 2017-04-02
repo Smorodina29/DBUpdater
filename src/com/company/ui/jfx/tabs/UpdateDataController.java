@@ -41,13 +41,7 @@ public class UpdateDataController implements TabController{
             }
         });
         resultsPane.setExpanded(false);
-    }
 
-    @Override
-    public void load() {
-        List<String> tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
-        System.out.println("TableNamesForAdd:" + tableNamesForUpdate);
-        tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
         tableNamesBox.valueProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -84,6 +78,13 @@ public class UpdateDataController implements TabController{
                 uploadButton.setDisable(!hasSelectedTable);
             }
         });
+    }
+
+    @Override
+    public void load() {
+        List<String> tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
+        System.out.println("TableNamesForAdd:" + tableNamesForUpdate);
+        tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
         if (!tableNamesForUpdate.isEmpty()) {
             tableNamesBox.setValue(tableNamesForUpdate.get(0));

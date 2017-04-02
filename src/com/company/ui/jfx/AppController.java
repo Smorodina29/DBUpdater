@@ -54,8 +54,6 @@ public class AppController {
         userControllers = new ArrayList<>();
         userControllers.add(addDataController);
         userControllers.add(updateDataController);
-
-
     }
 
     void onUserLogin(User user) {
@@ -68,8 +66,9 @@ public class AppController {
         } else {
             hide(userTabs);
             show(adminTabs);
-            administratorController.load();
-            settingsController.load();
+            for (TabController controller : adminControllers) {
+                controller.load();
+            }
         }
     }
 

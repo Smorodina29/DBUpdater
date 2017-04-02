@@ -43,6 +43,16 @@ public class AddDataController implements TabController{
             }
         });
         resultsPane.setExpanded(false);
+
+        tableNamesBox.valueProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                System.out.println("User selected table \'" + newValue + "\' for add.");
+                boolean hasSelectedTable = newValue != null && !newValue.isEmpty();
+                exportTemplateButton.setDisable(!hasSelectedTable);
+                uploadButton.setDisable(!hasSelectedTable);
+            }
+        });
     }
 
     public void upload(ActionEvent actionEvent) {
@@ -101,15 +111,7 @@ public class AddDataController implements TabController{
         System.out.println("tableNamesForUpdate:" + tableNamesForUpdate);
         tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
-        tableNamesBox.valueProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                System.out.println("User selected table \'" + newValue + "\' for add.");
-                boolean hasSelectedTable = newValue != null && !newValue.isEmpty();
-                exportTemplateButton.setDisable(!hasSelectedTable);
-                uploadButton.setDisable(!hasSelectedTable);
-            }
-        });
+
 
         if (!tableNamesForUpdate.isEmpty()) {
             tableNamesBox.setValue(tableNamesForUpdate.get(0));
