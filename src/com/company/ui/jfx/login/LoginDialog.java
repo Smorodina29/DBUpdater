@@ -40,7 +40,7 @@ public class LoginDialog extends Dialog<User> {
 
         // Set the button types.
         ButtonType loginButtonType = new ButtonType("Войти", ButtonBar.ButtonData.OK_DONE);
-        getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+        getDialogPane().getButtonTypes().addAll(loginButtonType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
 
         // Create the usernameField and password labels and fields.
@@ -86,10 +86,10 @@ public class LoginDialog extends Dialog<User> {
                         System.out.println("Already shows error label.");
                     }
                     wrongAuthDataLabel.setVisible(true);
+                    loginButton.setDisable(false);
+                    usernameField.setDisable(false);
+                    passwordField.setDisable(false);
                 }
-                loginButton.setDisable(false);
-                usernameField.setDisable(false);
-                passwordField.setDisable(false);
             }
         });
 

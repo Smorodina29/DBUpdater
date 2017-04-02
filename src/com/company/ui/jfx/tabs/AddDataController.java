@@ -111,8 +111,6 @@ public class AddDataController implements TabController{
         System.out.println("tableNamesForUpdate:" + tableNamesForUpdate);
         tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
-
-
         if (!tableNamesForUpdate.isEmpty()) {
             tableNamesBox.setValue(tableNamesForUpdate.get(0));
         }
