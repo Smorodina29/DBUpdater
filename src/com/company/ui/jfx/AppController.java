@@ -2,10 +2,7 @@ package com.company.ui.jfx;
 
 import com.company.ui.jfx.login.Role;
 import com.company.ui.jfx.login.User;
-import com.company.ui.jfx.tabs.AddDataController;
-import com.company.ui.jfx.tabs.AdministratorController;
-import com.company.ui.jfx.tabs.SettingsController;
-import com.company.ui.jfx.tabs.UpdateDataController;
+import com.company.ui.jfx.tabs.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -27,6 +24,8 @@ public class AppController {
     @FXML public SettingsController settingsController;
     private ArrayList<Tab> adminTabs;
     private ArrayList<Tab> userTabs;
+    private ArrayList<TabController> adminControllers;
+    private ArrayList<TabController> userControllers;
 
     public AppController() {
         System.out.println("Constructor called.");
@@ -46,23 +45,39 @@ public class AppController {
         adminTabs.add(adminTab);
         adminTabs.add(settingsTab);
         hide(adminTabs);
-    }
 
-    private void hide(ArrayList<Tab> tabs) {
-        tabPane.getTabs().removeAll(tabs);
+
+        adminControllers = new ArrayList<>();
+        adminControllers.add(administratorController);
+        adminControllers.add(settingsController);
+
+        userControllers = new ArrayList<>();
+        userControllers.add(addDataController);
+        userControllers.add(updateDataController);
+
+
     }
 
     void onUserLogin(User user) {
         if (Role.USER.equals(user.getRole())) {
             hide(adminTabs);
             show(userTabs);
+            for (TabController controller : userControllers) {
+                controller.load();
+            }
         } else {
             hide(userTabs);
             show(adminTabs);
+            administratorController.load();
+            settingsController.load();
         }
     }
 
     private void show(ArrayList<Tab> userTabs) {
         tabPane.getTabs().addAll(userTabs);
+    }
+
+    private void hide(ArrayList<Tab> tabs) {
+        tabPane.getTabs().removeAll(tabs);
     }
 }

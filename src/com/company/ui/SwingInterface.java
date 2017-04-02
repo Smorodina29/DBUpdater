@@ -125,7 +125,7 @@ public class SwingInterface extends JFrame {
     }
 
     private JPanel createAddPane() {
-        JPanel add = new JPanel();
+        JPanel addPanel = new JPanel();
         JComboBox<String> tablesCombobox = new JComboBox<>();
 //        tablesCombobox.setPreferredSize(new Dimension(200, 25));
 
@@ -135,7 +135,7 @@ public class SwingInterface extends JFrame {
             tablesCombobox.addItem(name);
         }
 
-        add.add(tablesCombobox);
+        addPanel.add(tablesCombobox);
         JButton importTableAdd = new JButton("Загрузить файл");
         importTableAdd.addActionListener(new ActionListener() {
             @Override
@@ -180,11 +180,11 @@ public class SwingInterface extends JFrame {
         JButton addDataAdd = new JButton("Добавить");
         JButton deleteAdd = new JButton("Удалить временную таблицу");
 
-        add.add(importTableAdd);
-        add.add(exportTemplateAdd);
-        add.add(addDataAdd);
-        add.add(deleteAdd);
-        return add;
+        addPanel.add(importTableAdd);
+        addPanel.add(exportTemplateAdd);
+        addPanel.add(addDataAdd);
+        addPanel.add(deleteAdd);
+        return addPanel;
     }
 
     public static void main(String[] args) {
