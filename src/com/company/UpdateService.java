@@ -4,11 +4,12 @@ import com.company.check.Check;
 import com.company.check.CheckException;
 import com.company.check.ChecksHolder;
 import com.company.data.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.sql.*;
@@ -393,7 +394,7 @@ public class UpdateService {
                     case ERROR:
                         throw new CheckException(check.getName());
                     case WARNING:
-                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Добавление.", JOptionPane.WARNING_MESSAGE);//todo no GUI interactions!
+                        new Alert(Alert.AlertType.WARNING, "Предупреждение: проверка не пройдена: " + check.getName(), ButtonType.OK).show();
                         break;
                     default:
                         throw new RuntimeException("Unknown check type:" + check.getType());
@@ -441,7 +442,7 @@ public class UpdateService {
                     case ERROR:
                         throw new CheckException(check.getName());
                     case WARNING:
-                        JOptionPane.showMessageDialog(null, "Предупреждение: проверка не пройдена: " + check.getName(), "InfoBox: Обновление.", JOptionPane.WARNING_MESSAGE);
+                        new Alert(Alert.AlertType.WARNING, "Предупреждение: проверка не пройдена: " + check.getName(), ButtonType.OK).show();
                         break;
                     default:
                         throw new RuntimeException("Unknown check type:" + check.getType());

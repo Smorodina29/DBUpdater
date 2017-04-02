@@ -14,7 +14,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class Mocka extends Application {
+public class DBUpdater extends Application {
 
     public static void main(String[] args) {
         launch(args);
@@ -22,7 +22,7 @@ public class Mocka extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource("sample.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource("dbupdater.fxml"));
         Parent root = fxmlLoader.load();
         primaryStage.setTitle("Утилита импорта данных");
         primaryStage.setScene(new Scene(root, 600, 500));

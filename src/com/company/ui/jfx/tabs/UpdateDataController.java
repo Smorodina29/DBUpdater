@@ -52,7 +52,7 @@ public class UpdateDataController implements TabController{
         tableNamesBox.valueProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String selectedTable) {
-                System.out.println("User selected table \'" + selectedTable + "\' for add.");
+                System.out.println("User selected table \'" + selectedTable + "\' for update.");
                 boolean hasSelectedTable = selectedTable != null && !selectedTable.isEmpty();
                 exportTemplateButton.setDisable(!hasSelectedTable);
                 uploadButton.setDisable(!hasSelectedTable);
@@ -78,7 +78,7 @@ public class UpdateDataController implements TabController{
         columnNamesBox.valueProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                System.out.println("User selected table \'" + newValue + "\' for update.");
+                System.out.println("User selected column \'" + newValue + "\' for update.");
                 boolean hasSelectedTable = newValue != null && !newValue.isEmpty();
                 exportTemplateButton.setDisable(!hasSelectedTable);
                 uploadButton.setDisable(!hasSelectedTable);
