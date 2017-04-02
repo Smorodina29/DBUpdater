@@ -38,18 +38,17 @@ public class FileService {
             List<Column> present = new ArrayList<>();
             Map<Column, Integer> col2indexMap = new HashMap<>();
             //search for columns
-            int x = 0; //x - current column
-            for (; x < lastX; x++) {
-                System.out.println("x="+x);
-                HSSFCell cell = row.getCell(x);
+            int index = 0; //x - current column
+            for (; index < lastX; index++) {
+                System.out.println("x="+index);
+                HSSFCell cell = row.getCell(index);
 
-                if (cell == null) throw new RuntimeException("Empty header at index " + x);
+                if (cell == null) throw new RuntimeException("Empty header at index " + index);
 
                 String currentHeaderName = cell.getStringCellValue(); //current value of cell
                 Column found = findColumnBy(currentHeaderName, targetColumns);
 
                 if (found == null) {
-//                    throw new Exception("Found column with illegal name \'" + currentHeaderName + "\'");
                     System.out.println("Skipped column `" + currentHeaderName + "\'");
                     continue;
                 }
@@ -59,7 +58,7 @@ public class FileService {
                 }
 
                 present.add(found);
-                col2indexMap.put(found, x);
+                col2indexMap.put(found, index);
             }
 
             List<Column> mustPresent = filterNotNullable(targetColumns);
@@ -286,17 +285,22 @@ public class FileService {
                 HSSFCell idCell = row.getCell(idX);
                 HSSFCell targetCell = row.getCell(res);
 
-                int cellType = targetCell != null ? targetCell.getCellType() : -1;
+                int cellType;
+                if (targetCell != null) {
+                    cellType = targetCell.getCellType();
+                } else {
+                    cellType = -1;
+                }
                 System.out.println("cell [" + res + ", " + y + "] type=" + cellType);
 
-                boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > 0;
+                boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > -1;
                 if (hasIdValue) {
                     int id = (int) (idCell.getNumericCellValue());
                     KeyValue kv = getCellValue(id, targetCell, targetColumn, res, y);
                     System.out.println("kv=" + kv);
                     result.add(kv);
-                } else if (targetCell!=null && targetCell.getStringCellValue()== null){
-                    throw new RuntimeException("Row with index #" + y  + " is empty");
+                } else if (targetCell!=null && targetCell.getStringCellValue()!= null){
+                    throw new RuntimeException("Row with index #" + y  + " has empty or incorrect id and not empty value.");
                 }
             }
 
