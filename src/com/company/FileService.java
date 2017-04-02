@@ -293,7 +293,7 @@ public class FileService {
                 }
                 System.out.println("cell [" + res + ", " + y + "] type=" + cellType);
 
-                boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > -1;
+                boolean hasIdValue = idCell != null && idCell.getNumericCellValue() > 0;
                 if (hasIdValue) {
                     int id = (int) (idCell.getNumericCellValue());
                     KeyValue kv = getCellValue(id, targetCell, targetColumn, res, y);
