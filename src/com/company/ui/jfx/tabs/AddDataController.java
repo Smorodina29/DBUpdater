@@ -73,7 +73,7 @@ public class AddDataController implements TabController{
             String targetTableName = tableNamesBox.getValue();
 
             try {
-                int affected = UpdateService.importData(path, targetTableName);
+                int affected = UpdateService.importAndAdd(path, targetTableName);
                 affectedRowsCountLabel.setText("" + affected);
                 resultsTextArea.setText("Добавлено " + affected + " записей в таблицу " + targetTableName);
             } catch (SQLException ex) {

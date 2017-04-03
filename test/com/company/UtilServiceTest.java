@@ -144,42 +144,6 @@ public class UtilServiceTest {
     }
 
     @Test
-    public void updateScriptTest() {
-        UniqueIdCheck check = new UniqueIdCheck();
-        String tableName = "address";
-        String targetTableName = "address_16102016_05_39";
-        String columnName = "address";
-
-        boolean passed = UpdateService.checkForUpdate(tableName, columnName, targetTableName, check,4);
-        assertTrue(passed);
-    }
-
-
-    @Test
-    public void checkUniqueRowsTest() {
-        UniqueRowsCheck check = new UniqueRowsCheck();
-
-        String tableName = "address";
-        String targetTableName = "address_16102016_05_39";
-        String columnName = "address";
-
-        boolean passed = UpdateService.checkForUpdate(tableName, columnName, targetTableName, check, 4);
-        assertTrue(passed);
-    }
-
-    @Test
-    public void checkRowsPresentTest(){
-        PresentRowsCheck check = new PresentRowsCheck();
-
-        String tableName = "address";
-        String targetTableName = "address_16102016_05_39";
-        String columnName = "address";
-
-        boolean passed = UpdateService.checkForUpdate(tableName, columnName, targetTableName, check, 4);
-        assertTrue(passed);
-    }
-
-    @Test
     public void filterColumnsForUpdate() {
         /*Column{name='id', type='int', dataType=VARCHAR, isNullable=false, length=0}
         Column{name='address', type='varchar', dataType=VARCHAR, isNullable=false, length=50}

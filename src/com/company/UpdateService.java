@@ -2,7 +2,6 @@ package com.company;
 
 import com.company.check.Check;
 import com.company.check.CheckException;
-import com.company.check.ChecksHolder;
 import com.company.data.*;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -375,13 +374,13 @@ public class UpdateService {
         return null;
     }
 
-    public static int importData(String path, String targetTableName) throws SQLException, CheckException {
+    public static int importAndAdd(String path, String targetTableName) throws SQLException, CheckException {
         List<Column> columns = filterForAdd(getTableStructure(targetTableName));
         List<Map<Column, KeyValue>> data = FileService.readForAdd(path, targetTableName, columns);
         String tempTableName = createTempTable(targetTableName, columns);
         fillTable(tempTableName, data);
 
-        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName);
+        List<Check> checks = ChecksService.getChecksForAdd(targetTableName);
         if (checks == null || checks.isEmpty()) {
             throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
         }
@@ -428,7 +427,7 @@ public class UpdateService {
 
         System.out.println("Start checking tables!");
 
-        List<Check> checks = ChecksHolder.getInstance().getChecksFor(targetTableName, targetColumnName);
+        List<Check> checks = ChecksService.getChecksForUpdate(targetTableName, targetColumnName);
 
         if (checks == null || checks.isEmpty()) {
             throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
