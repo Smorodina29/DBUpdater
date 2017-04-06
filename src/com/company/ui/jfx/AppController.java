@@ -3,6 +3,10 @@ package com.company.ui.jfx;
 import com.company.ui.jfx.login.Role;
 import com.company.ui.jfx.login.User;
 import com.company.ui.jfx.tabs.*;
+import com.company.ui.jfx.tabs.admin.ChecksController;
+import com.company.ui.jfx.tabs.admin.SettingsController;
+import com.company.ui.jfx.tabs.user.AddDataController;
+import com.company.ui.jfx.tabs.user.UpdateDataController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -20,7 +24,7 @@ public class AppController {
     @FXML public TabPane tabPane;
     @FXML public AddDataController addDataController;
     @FXML public UpdateDataController updateDataController;
-    @FXML public AdministratorController administratorController;
+    @FXML public ChecksController checksController;
     @FXML public SettingsController settingsController;
     private ArrayList<Tab> adminTabs;
     private ArrayList<Tab> userTabs;
@@ -48,7 +52,7 @@ public class AppController {
 
 
         adminControllers = new ArrayList<>();
-        adminControllers.add(administratorController);
+        adminControllers.add(checksController);
         adminControllers.add(settingsController);
 
         userControllers = new ArrayList<>();
