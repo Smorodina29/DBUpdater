@@ -71,4 +71,16 @@ public abstract class Check {
     }
 
     public abstract boolean validate(int resultCount, long numberOfRowsInTempTable);
+
+    @Override
+    public String toString() {
+        return "Check{" +
+                "id='" + id + '\'' +
+                ", queryText='" + queryText + '\'' +
+                ", name='" + name + '\'' +
+                ", messageText='" + messageText + '\'' +
+                ", type=" + type +
+                ", validationMethod=" + validationMethod +
+                '}';
+    }
 }

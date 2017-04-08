@@ -74,7 +74,7 @@ public class ChecksService {
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String queryString = "select name, check_type, validation_type, query_text, message_text from query_check;";
+            String queryString = "select id, name, check_type, validation_type, query_text, message_text from query_check;";
             System.out.println("query to load checks=\'" + queryString + "\'");
             ResultSet rs = statement.executeQuery(queryString);
             results = getChecksFrom(rs);

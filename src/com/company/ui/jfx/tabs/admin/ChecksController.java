@@ -14,6 +14,8 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ComboBoxTableCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Callback;
 
 import java.sql.SQLException;
@@ -30,6 +32,9 @@ public class ChecksController implements TabController {
     public TableColumn<Check, ValidationMethod> validationTypeColumn;
     public TableColumn<Check, String> queryTextColumn;
     public TableColumn<Check, String> messageTextColumn;
+    public TableColumn<Check, Check> editColumn;
+    public TableColumn<Check, Check> deleteColumn;
+
     public Button refreshButton;
 
     /**
@@ -78,6 +83,79 @@ public class ChecksController implements TabController {
             }
         });
 
+        editColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Check, Check>, ObservableValue<Check>>() {
+            @Override
+            public ObservableValue<Check> call(TableColumn.CellDataFeatures<Check, Check> param) {
+                return new SimpleObjectProperty<Check>(param.getValue());
+            }
+        });
+
+
+        editColumn.setCellFactory(new Callback<TableColumn<Check, Check>, TableCell<Check, Check>>() {
+            @Override
+            public TableCell<Check, Check> call(TableColumn<Check, Check> param) {
+                TableCell<Check, Check> cell = new TableCell<Check, Check>() {
+
+                    final Button btn = new Button("", new ImageView(new Image("icons/edit.png")));
+
+                    @Override
+                    protected void updateItem(Check item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                            setText(null);
+                        } else {
+                            btn.setOnAction(new EventHandler<ActionEvent>() {
+                                @Override
+                                public void handle(ActionEvent event) {
+                                    System.out.println("Clicked edit on " + item);
+                                }
+                            });
+                            setGraphic(btn);
+                            setText(null);
+                        }
+                    }
+                };
+                return cell;
+            }
+        });
+
+        deleteColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Check, Check>, ObservableValue<Check>>() {
+            @Override
+            public ObservableValue<Check> call(TableColumn.CellDataFeatures<Check, Check> param) {
+                return new SimpleObjectProperty<Check>(param.getValue());
+            }
+        });
+        deleteColumn.setCellFactory(new Callback<TableColumn<Check, Check>, TableCell<Check, Check>>() {
+            @Override
+            public TableCell<Check, Check> call(TableColumn<Check, Check> param) {
+                TableCell<Check, Check> cell = new TableCell<Check, Check>() {
+                    final Button btn = new Button("", new ImageView(new Image("icons/delete.png")));
+
+                    @Override
+                    protected void updateItem(Check item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                            setText(null);
+                        } else {
+                            btn.setOnAction(new EventHandler<ActionEvent>() {
+                                @Override
+                                public void handle(ActionEvent event) {
+                                    System.out.println("Clicked edit on " + item);
+                                }
+                            });
+                            setGraphic(btn);
+                            setText(null);
+                        }
+                    }
+                };
+                return cell;
+            }
+        });
+
+
+        // --BUTTONS--
         refreshButton.addEventHandler(ActionEvent.ACTION, new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
