@@ -6,8 +6,8 @@ package com.company.check;
 public class AllValidationCheck extends Check {
 
 
-    public AllValidationCheck(String queryText, String name, String messageText, CheckType type) {
-        super(queryText, name, messageText, type, ValidationMethod.ALL);
+    public AllValidationCheck(String id, String queryText, String name, String messageText, CheckType type) {
+        super(id, queryText, name, messageText, type, ValidationMethod.ALL);
     }
 
     @Override

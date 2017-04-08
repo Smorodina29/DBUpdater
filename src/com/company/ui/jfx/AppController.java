@@ -70,6 +70,7 @@ public class AppController {
         } else {
             hide(userTabs);
             show(adminTabs);
+            System.out.println("adminControllers");
             for (TabController controller : adminControllers) {
                 controller.load();
             }

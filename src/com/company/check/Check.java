@@ -4,6 +4,7 @@ package com.company.check;
  * Created by Александр on 18.03.2017.
  */
 public abstract class Check {
+    public String id;
     public String queryText;
     public String name;
     public String messageText;
@@ -15,7 +16,8 @@ public abstract class Check {
     public static final String COLUMN_NAME_PLACEHOLDER = "%columnName%";
 
 
-    public Check(String queryText, String name, String messageText, CheckType type, ValidationMethod validationMethod) {
+    public Check(String id, String queryText, String name, String messageText, CheckType type, ValidationMethod validationMethod) {
+        this.id = id;
         this.queryText = queryText;
         this.name = name;
         this.messageText = messageText;

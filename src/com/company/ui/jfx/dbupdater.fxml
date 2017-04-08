@@ -18,7 +18,7 @@
                             <fx:include fx:id="updateData" source="tabs/user/updateData.fxml"/>
                         </Tab>
                         <Tab text="Администрирование" fx:id="adminTab">
-                            <fx:include fx:id="administrator" source="tabs/admin/checks.fxml"/>
+                            <fx:include fx:id="checks" source="tabs/admin/checks.fxml"/>
                         </Tab>
                         <Tab text="Настройки" fx:id="settingsTab">
                             <fx:include fx:id="settings" source="tabs/admin/settings.fxml"/>

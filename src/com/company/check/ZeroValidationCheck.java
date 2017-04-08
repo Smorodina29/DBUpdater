@@ -6,8 +6,8 @@ package com.company.check;
 public class ZeroValidationCheck extends Check {
 
 
-    public ZeroValidationCheck(String queryText, String name, String messageText, CheckType type) {
-        super(queryText, name, messageText, type, ValidationMethod.ZERO);
+    public ZeroValidationCheck(String id, String queryText, String name, String messageText, CheckType type) {
+        super(id, queryText, name, messageText, type, ValidationMethod.ZERO);
     }
 
     @Override
