@@ -1,21 +1,24 @@
 package com.company.ui.jfx.tabs.admin;
 
 import com.company.ChecksService;
-import com.company.UpdateService;
 import com.company.check.Check;
 import com.company.check.CheckType;
 import com.company.check.ValidationMethod;
+import com.company.ui.jfx.editors.DataPatch;
+import com.company.ui.jfx.editors.EditCallback;
+import com.company.ui.jfx.editors.EditCheckDialog;
 import com.company.ui.jfx.tabs.TabController;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.util.Callback;
 
 import java.sql.SQLException;
@@ -26,7 +29,7 @@ import java.util.List;
  * Created by Александр on 01.04.2017.
  */
 public class ChecksController implements TabController {
-    public TableView<Check> gridView;
+    public TableView<Check> tableView;
     public TableColumn<Check, String> nameColumn;
     public TableColumn<Check, CheckType> typeColumn;
     public TableColumn<Check, ValidationMethod> validationTypeColumn;
@@ -36,6 +39,10 @@ public class ChecksController implements TabController {
     public TableColumn<Check, Check> deleteColumn;
 
     public Button refreshButton;
+    public BorderPane root;
+    public Button saveButton;
+
+    private DataPatch dataPatch = new DataPatch();
 
     /**
      * Инициализация класса-контроллера. Этот метод вызывается автоматически
@@ -44,11 +51,7 @@ public class ChecksController implements TabController {
     @FXML
     private void initialize() {
 
-        //nameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getName()));
-
-        /* Инициализация таблицы проверок с двумя столбцами.
-
-         */
+        // Инициализация таблицы проверок с двумя столбцами.
         nameColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Check, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Check, String> param) {
@@ -109,6 +112,7 @@ public class ChecksController implements TabController {
                                 @Override
                                 public void handle(ActionEvent event) {
                                     System.out.println("Clicked edit on " + item);
+                                    onEditCheckClick(item);
                                 }
                             });
                             setGraphic(btn);
@@ -143,6 +147,7 @@ public class ChecksController implements TabController {
                                 @Override
                                 public void handle(ActionEvent event) {
                                     System.out.println("Clicked edit on " + item);
+                                    onDeleteClick(item);
                                 }
                             });
                             setGraphic(btn);
@@ -153,16 +158,35 @@ public class ChecksController implements TabController {
                 return cell;
             }
         });
+    }
 
-
-        // --BUTTONS--
-        refreshButton.addEventHandler(ActionEvent.ACTION, new EventHandler<ActionEvent>() {
+    private void onEditCheckClick(Check item) {
+        EditCheckDialog dialog = new EditCheckDialog();
+        dialog.open(item, root.getScene().getWindow(), new EditCallback<Check>() {
             @Override
-            public void handle(ActionEvent event) {
-                load();
-                System.out.println("Refreshed checks table.");
+            public void onFinish(Check edited) {
+                dataPatch.addUpdated(edited);
+                ObservableList<Check> list = tableView.itemsProperty().getValue();
+                list.add(list.indexOf(item), edited);
+                list.remove(item);
+                System.out.println("Finished editing: " + edited);
+                saveButton.setDisable(dataPatch.isEmpty());
+                tableView.refresh();
+            }
+
+            @Override
+            public void onCancel() {
+                System.out.println("User cancelled editing.");
             }
         });
+    }
+
+    private void onDeleteClick(Check item) {
+        dataPatch.addDeleted(item);
+        tableView.itemsProperty().getValue().remove(item);
+        System.out.println("Deleted: " + item);
+        saveButton.setDisable(dataPatch.isEmpty());
+        tableView.refresh();
     }
 
     @Override
@@ -175,8 +199,34 @@ public class ChecksController implements TabController {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Нe удалось загрузить список проверок. Ошибка: " + e.getMessage(), ButtonType.OK).show();
         }
-        gridView.getItems().clear();
-        gridView.getItems().addAll(checks);
-        System.out.println("Loaded " + checks.size() + " checks.");
+        tableView.getItems().clear();
+        tableView.getItems().addAll(checks);
+        dataPatch.clear();
+        System.out.println("Loaded " + checks.size() + " checks. Dropped data patch.");
+        saveButton.setDisable(dataPatch.isEmpty());
+    }
+
+    public void refresh(ActionEvent actionEvent) {
+        load();
+        System.out.println("Refreshed checks table.");
+    }
+
+    public void saveChanges(ActionEvent event) {
+        if (dataPatch.isNotEmpty()) {
+            System.out.println("Start saving patch: " + dataPatch);
+            try {
+                ChecksService.update(dataPatch.getUpdated());
+                ChecksService.delete(dataPatch.getDeleted());
+                System.out.println("Saved patch: " + dataPatch);
+            } catch (SQLException e) {
+                new Alert(Alert.AlertType.ERROR, "Произошла ошибка во время сохранения:" + e.getMessage(), ButtonType.OK).show();
+                System.out.println("Failed to save patch: " + e.getMessage());
+                e.printStackTrace();
+            }
+            dataPatch.clear();
+        } else {
+            System.out.println("Clicked save, although data patch is empty. ");
+        }
+        saveButton.setDisable(dataPatch.isEmpty());
     }
 }

@@ -2,6 +2,7 @@ package com.company;
 
 import com.company.check.*;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -55,16 +56,7 @@ public class ChecksService {
             CheckType type = CheckType.valueOf(rs.getString("check_type"));
             ValidationMethod validationMethod = ValidationMethod.valueOf(rs.getString("validation_type"));
 
-            Check check;
-
-            if (ValidationMethod.ALL.equals(validationMethod)) {
-                check = new AllValidationCheck(id, queryText, name, messageText, type);
-            } else if (ValidationMethod.ZERO.equals(validationMethod)) {
-                check = new ZeroValidationCheck(id, queryText, name, messageText, type);
-            } else {
-                throw new RuntimeException("Unknown validation method `" + validationMethod + "\'");
-            }
-            checks.add(check);
+            checks.add(Check.create(id, queryText, name, messageText, type, validationMethod));
         }
         return checks;
     }
@@ -82,5 +74,40 @@ public class ChecksService {
             Utils.closeQuietly(statement);
         }
         return results;
+    }
+
+    public static void update(List<Check> updated) throws SQLException {
+        if (updated == null || updated.isEmpty()) return;
+        String quryString = "update query_check set query_text=?, name=?, check_type=?, validation_type=?, message_text=? where id=?;";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(quryString);
+            for (Check check : updated) {
+                ps.setString(1, check.getQueryText());
+                ps.setString(2, check.getName());
+                ps.setString(3, check.getType().name());
+                ps.setString(4, check.getValidationMethod().name());
+                ps.setString(5, check.getMessageText());
+                ps.setInt(6, Integer.parseInt(check.getId()));
+                ps.executeUpdate();
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    public static void delete(List<Check> updated) throws SQLException {
+        if (updated == null || updated.isEmpty()) return;
+        String quryString = "delete from query_check where id=?;";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(quryString);
+            for (Check check : updated) {
+                ps.setInt(1, Integer.parseInt(check.getId()));
+                ps.executeUpdate();
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
     }
 }

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox minHeight="0.0" minWidth="0.0" prefHeight="500.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/null" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.company.ui.jfx.editors.EditCheckDialogController">
+   <children>
+      <Label text="Название:">
+         <padding>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+      </Label>
+      <TextField promptText="Название проверки" fx:id="nameField">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </TextField>
+      <Label text="Тип проверки:">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </Label>
+      <ComboBox prefWidth="150.0" fx:id="typeComboBox">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </ComboBox>
+      <Label text="Способ валидации:">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </Label>
+      <ComboBox prefWidth="150.0" fx:id="validationMethodBox">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </ComboBox>
+      <Label text="Текст запроса:">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </Label>
+      <TextArea prefHeight="100.0" prefWidth="400.0" fx:id="queryTextArea">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </TextArea>
+      <Label text="Текст сообщения:">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </Label>
+      <TextArea prefHeight="100.0" prefWidth="400.0" fx:id="messageTextArea">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </TextArea>
+   </children>
+</VBox>
