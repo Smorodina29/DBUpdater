@@ -53,6 +53,10 @@ public abstract class Check {
         return validationMethod;
     }
 
+    public boolean isNew() {
+        return id == null || id.isEmpty();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

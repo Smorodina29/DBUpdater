@@ -7,6 +7,7 @@ import com.company.check.ValidationMethod;
 import com.company.ui.jfx.editors.DataPatch;
 import com.company.ui.jfx.editors.EditCallback;
 import com.company.ui.jfx.editors.EditCheckDialog;
+import com.company.ui.jfx.editors.adding.CreateCheckDialog;
 import com.company.ui.jfx.tabs.TabController;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -41,6 +42,7 @@ public class ChecksController implements TabController {
     public Button refreshButton;
     public BorderPane root;
     public Button saveButton;
+    public Button addButton;
 
     private DataPatch dataPatch = new DataPatch();
 
@@ -165,7 +167,11 @@ public class ChecksController implements TabController {
         dialog.open(item, root.getScene().getWindow(), new EditCallback<Check>() {
             @Override
             public void onFinish(Check edited) {
-                dataPatch.addUpdated(edited);
+                if (edited.isNew()) {
+                    dataPatch.updateCreated(edited, item);
+                } else {
+                    dataPatch.addUpdated(edited);
+                }
                 ObservableList<Check> list = tableView.itemsProperty().getValue();
                 list.add(list.indexOf(item), edited);
                 list.remove(item);
@@ -182,7 +188,11 @@ public class ChecksController implements TabController {
     }
 
     private void onDeleteClick(Check item) {
-        dataPatch.addDeleted(item);
+        if (item.isNew()) {
+            dataPatch.getCreated().remove(item);
+        } else {
+            dataPatch.addDeleted(item);
+        }
         tableView.itemsProperty().getValue().remove(item);
         System.out.println("Deleted: " + item);
         saveButton.setDisable(dataPatch.isEmpty());
@@ -216,9 +226,16 @@ public class ChecksController implements TabController {
             System.out.println("Start applying patch: " + dataPatch);
             try {
                 ChecksService.update(dataPatch.getUpdated());
+                dataPatch.getUpdated().clear();
                 ChecksService.delete(dataPatch.getDeleted());
+                dataPatch.getDeleted().clear();
+                ChecksService.create(dataPatch.getCreated());
                 System.out.println("Applied patch: " + dataPatch);
-                dataPatch.clear();
+                /*
+                * перезагрузка нужна для того, чтобы вновь добавленные проверки в дальнейшем при редактировании
+                * помечались как отредактированые, а не добавленные (не dataPatch.created, dataPatch.updated)
+                * */
+                load();
             } catch (SQLException e) {
                 new Alert(Alert.AlertType.ERROR, "Произошла ошибка во время сохранения:" + e.getMessage(), ButtonType.OK).show();
                 System.out.println("Failed to save patch: " + e.getMessage());
@@ -226,7 +243,27 @@ public class ChecksController implements TabController {
             }
         } else {
             System.out.println("Clicked save, although data patch is empty. ");
+            saveButton.setDisable(true);
         }
-        saveButton.setDisable(dataPatch.isEmpty());
+    }
+
+    public void add(ActionEvent actionEvent) {
+        CreateCheckDialog dialog = new CreateCheckDialog();
+        dialog.open(root.getScene().getWindow(), new EditCallback<Check>() {
+            @Override
+            public void onFinish(Check create) {
+                dataPatch.getCreated().add(create);
+                ObservableList<Check> list = tableView.itemsProperty().getValue();
+                list.add(create);
+                System.out.println("Finished creating new: " + create);
+                saveButton.setDisable(dataPatch.isEmpty());
+                tableView.refresh();
+            }
+
+            @Override
+            public void onCancel() {
+                System.out.println("User cancelled creating.");
+            }
+        });
     }
 }

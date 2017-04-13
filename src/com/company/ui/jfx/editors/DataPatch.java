@@ -12,6 +12,7 @@ public class DataPatch {
 
     List<Check> updated = new ArrayList<>();
     List<Check> deleted = new ArrayList<>();
+    List<Check> created = new ArrayList<>();;
 
     public void addUpdated(Check edited) {
         //ensure that check will be the one (with such id) in the patch
@@ -43,7 +44,7 @@ public class DataPatch {
 
 
     public boolean isEmpty() {
-        return updated.isEmpty() && deleted.isEmpty();
+        return updated.isEmpty() && deleted.isEmpty() && created.isEmpty();
     }
 
     public boolean isNotEmpty() {
@@ -53,6 +54,7 @@ public class DataPatch {
     public void clear() {
         updated.clear();
         deleted.clear();
+        created.clear();
     }
 
 
@@ -69,6 +71,16 @@ public class DataPatch {
         return "DataPatch{" +
                 "updated=" + updated +
                 ", deleted=" + deleted +
+                ", created=" + created +
                 '}';
+    }
+
+    public void updateCreated(Check edited, Check oldValue) {
+        created.remove(oldValue);
+        created.add(edited);
+    }
+
+    public List<Check> getCreated() {
+        return created;
     }
 }

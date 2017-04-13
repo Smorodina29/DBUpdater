@@ -63,6 +63,14 @@ public class Utils {
         }
     }
 
+    public static boolean isEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
+
+    public static boolean isNotEmpty(String s) {
+        return !isEmpty(s);
+    }
+
 
     public static void closeQuietly(Connection connection) {
         if (connection != null) {

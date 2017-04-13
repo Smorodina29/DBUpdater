@@ -25,7 +25,7 @@ public class DBUpdater extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource("dbupdater.fxml"));
         Parent root = fxmlLoader.load();
         primaryStage.setTitle("Утилита импорта данных");
-        primaryStage.setScene(new Scene(root, 600, 500));
+        primaryStage.setScene(new Scene(root, 800, 500));
         Image e = new Image("icons/icon.png");
         primaryStage.getIcons().add(e);
         AppController controller = fxmlLoader.<AppController>getController();

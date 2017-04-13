@@ -111,4 +111,23 @@ public class ChecksService {
             Utils.closeQuietly(ps);
         }
     }
+
+    public static void create(List<Check> created) throws SQLException {
+        if (created == null || created.isEmpty()) return;
+        String quryString = "insert into query_check (query_text, name, check_type, validation_type, message_text) values (?, ?, ?, ?, ?);";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(quryString);
+            for (Check check : created) {
+                ps.setString(1, check.getQueryText());
+                ps.setString(2, check.getName());
+                ps.setString(3, check.getType().name());
+                ps.setString(4, check.getValidationMethod().name());
+                ps.setString(5, check.getMessageText());
+                ps.executeUpdate();
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
 }

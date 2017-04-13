@@ -12,6 +12,7 @@
             <items>
                 <Button fx:id="saveButton" mnemonicParsing="false" text="Сохранить" disable="true" onAction="#saveChanges" />
                 <Button fx:id="refreshButton" mnemonicParsing="false" text="Обновить" onAction="#refresh"/>
+                <Button fx:id="addButton" mnemonicParsing="false" text="Добавить" onAction="#add"/>
             </items>
         </ToolBar>
     </top>
