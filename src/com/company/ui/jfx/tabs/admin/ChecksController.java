@@ -213,17 +213,17 @@ public class ChecksController implements TabController {
 
     public void saveChanges(ActionEvent event) {
         if (dataPatch.isNotEmpty()) {
-            System.out.println("Start saving patch: " + dataPatch);
+            System.out.println("Start applying patch: " + dataPatch);
             try {
                 ChecksService.update(dataPatch.getUpdated());
                 ChecksService.delete(dataPatch.getDeleted());
-                System.out.println("Saved patch: " + dataPatch);
+                System.out.println("Applied patch: " + dataPatch);
+                dataPatch.clear();
             } catch (SQLException e) {
                 new Alert(Alert.AlertType.ERROR, "Произошла ошибка во время сохранения:" + e.getMessage(), ButtonType.OK).show();
                 System.out.println("Failed to save patch: " + e.getMessage());
                 e.printStackTrace();
             }
-            dataPatch.clear();
         } else {
             System.out.println("Clicked save, although data patch is empty. ");
         }

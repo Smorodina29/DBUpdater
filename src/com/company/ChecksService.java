@@ -98,12 +98,13 @@ public class ChecksService {
 
     public static void delete(List<Check> updated) throws SQLException {
         if (updated == null || updated.isEmpty()) return;
-        String quryString = "delete from query_check where id=?;";
+        String quryString = "delete from pair_checks where query_check_id=?; delete from query_check where id=?;";
         PreparedStatement ps = null;
         try {
             ps = ConnectionProvider.get().getConnection().prepareStatement(quryString);
             for (Check check : updated) {
                 ps.setInt(1, Integer.parseInt(check.getId()));
+                ps.setInt(2, Integer.parseInt(check.getId()));
                 ps.executeUpdate();
             }
         } finally {
