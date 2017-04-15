@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by Александр on 11.04.2017.
  */
-public class DataPatch {
+public class ChecksPatch {
 
     List<Check> updated = new ArrayList<>();
     List<Check> deleted = new ArrayList<>();
@@ -68,7 +68,7 @@ public class DataPatch {
 
     @Override
     public String toString() {
-        return "DataPatch{" +
+        return "ChecksPatch{" +
                 "updated=" + updated +
                 ", deleted=" + deleted +
                 ", created=" + created +

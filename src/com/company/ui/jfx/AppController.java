@@ -5,6 +5,7 @@ import com.company.ui.jfx.login.User;
 import com.company.ui.jfx.tabs.*;
 import com.company.ui.jfx.tabs.admin.ChecksController;
 import com.company.ui.jfx.tabs.admin.SettingsController;
+import com.company.ui.jfx.tabs.admin.TablesController;
 import com.company.ui.jfx.tabs.user.AddDataController;
 import com.company.ui.jfx.tabs.user.UpdateDataController;
 import javafx.fxml.FXML;
@@ -18,14 +19,17 @@ public class AppController {
 
     @FXML public Tab addTab;
     @FXML public Tab updateTab;
-    @FXML public Tab adminTab;
+    @FXML public Tab checksTab;
+    @FXML public Tab tablesTab;
     @FXML public Tab settingsTab;
     @FXML public BorderPane root;
     @FXML public TabPane tabPane;
     @FXML public AddDataController addDataController;
     @FXML public UpdateDataController updateDataController;
     @FXML public ChecksController checksController;
+    @FXML public TablesController tablesController;
     @FXML public SettingsController settingsController;
+
     private ArrayList<Tab> adminTabs;
     private ArrayList<Tab> userTabs;
     private ArrayList<TabController> adminControllers;
@@ -46,13 +50,15 @@ public class AppController {
         userTabs.add(updateTab);
 
         adminTabs = new ArrayList<>();
-        adminTabs.add(adminTab);
+        adminTabs.add(checksTab);
+        adminTabs.add(tablesTab);
         adminTabs.add(settingsTab);
         hide(adminTabs);
 
 
         adminControllers = new ArrayList<>();
         adminControllers.add(checksController);
+        adminControllers.add(tablesController);
         adminControllers.add(settingsController);
 
         userControllers = new ArrayList<>();

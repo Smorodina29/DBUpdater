@@ -4,7 +4,7 @@ import com.company.ChecksService;
 import com.company.check.Check;
 import com.company.check.CheckType;
 import com.company.check.ValidationMethod;
-import com.company.ui.jfx.editors.DataPatch;
+import com.company.ui.jfx.editors.ChecksPatch;
 import com.company.ui.jfx.editors.EditCallback;
 import com.company.ui.jfx.editors.EditCheckDialog;
 import com.company.ui.jfx.editors.adding.CreateCheckDialog;
@@ -44,7 +44,7 @@ public class ChecksController implements TabController {
     public Button saveButton;
     public Button addButton;
 
-    private DataPatch dataPatch = new DataPatch();
+    private ChecksPatch checksPatch = new ChecksPatch();
 
     /**
      * Инициализация класса-контроллера. Этот метод вызывается автоматически
@@ -168,15 +168,15 @@ public class ChecksController implements TabController {
             @Override
             public void onFinish(Check edited) {
                 if (edited.isNew()) {
-                    dataPatch.updateCreated(edited, item);
+                    checksPatch.updateCreated(edited, item);
                 } else {
-                    dataPatch.addUpdated(edited);
+                    checksPatch.addUpdated(edited);
                 }
                 ObservableList<Check> list = tableView.itemsProperty().getValue();
                 list.add(list.indexOf(item), edited);
                 list.remove(item);
                 System.out.println("Finished editing: " + edited);
-                saveButton.setDisable(dataPatch.isEmpty());
+                saveButton.setDisable(checksPatch.isEmpty());
                 tableView.refresh();
             }
 
@@ -189,13 +189,13 @@ public class ChecksController implements TabController {
 
     private void onDeleteClick(Check item) {
         if (item.isNew()) {
-            dataPatch.getCreated().remove(item);
+            checksPatch.getCreated().remove(item);
         } else {
-            dataPatch.addDeleted(item);
+            checksPatch.addDeleted(item);
         }
         tableView.itemsProperty().getValue().remove(item);
         System.out.println("Deleted: " + item);
-        saveButton.setDisable(dataPatch.isEmpty());
+        saveButton.setDisable(checksPatch.isEmpty());
         tableView.refresh();
     }
 
@@ -211,9 +211,9 @@ public class ChecksController implements TabController {
         }
         tableView.getItems().clear();
         tableView.getItems().addAll(checks);
-        dataPatch.clear();
+        checksPatch.clear();
         System.out.println("Loaded " + checks.size() + " checks. Dropped data patch.");
-        saveButton.setDisable(dataPatch.isEmpty());
+        saveButton.setDisable(checksPatch.isEmpty());
     }
 
     public void refresh(ActionEvent actionEvent) {
@@ -222,18 +222,18 @@ public class ChecksController implements TabController {
     }
 
     public void saveChanges(ActionEvent event) {
-        if (dataPatch.isNotEmpty()) {
-            System.out.println("Start applying patch: " + dataPatch);
+        if (checksPatch.isNotEmpty()) {
+            System.out.println("Start applying patch: " + checksPatch);
             try {
-                ChecksService.update(dataPatch.getUpdated());
-                dataPatch.getUpdated().clear();
-                ChecksService.delete(dataPatch.getDeleted());
-                dataPatch.getDeleted().clear();
-                ChecksService.create(dataPatch.getCreated());
-                System.out.println("Applied patch: " + dataPatch);
+                ChecksService.update(checksPatch.getUpdated());
+                checksPatch.getUpdated().clear();
+                ChecksService.delete(checksPatch.getDeleted());
+                checksPatch.getDeleted().clear();
+                ChecksService.create(checksPatch.getCreated());
+                System.out.println("Applied patch: " + checksPatch);
                 /*
                 * перезагрузка нужна для того, чтобы вновь добавленные проверки в дальнейшем при редактировании
-                * помечались как отредактированые, а не добавленные (не dataPatch.created, dataPatch.updated)
+                * помечались как отредактированые, а не добавленные (не checksPatch.created, checksPatch.updated)
                 * */
                 load();
             } catch (SQLException e) {
@@ -252,11 +252,11 @@ public class ChecksController implements TabController {
         dialog.open(root.getScene().getWindow(), new EditCallback<Check>() {
             @Override
             public void onFinish(Check create) {
-                dataPatch.getCreated().add(create);
+                checksPatch.getCreated().add(create);
                 ObservableList<Check> list = tableView.itemsProperty().getValue();
                 list.add(create);
                 System.out.println("Finished creating new: " + create);
-                saveButton.setDisable(dataPatch.isEmpty());
+                saveButton.setDisable(checksPatch.isEmpty());
                 tableView.refresh();
             }
 
