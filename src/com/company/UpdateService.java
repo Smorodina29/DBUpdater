@@ -3,6 +3,8 @@ package com.company;
 import com.company.check.Check;
 import com.company.check.CheckException;
 import com.company.data.*;
+import com.company.ui.jfx.tabs.admin.models.ColumnModel;
+import com.company.ui.jfx.tabs.admin.models.TableModel;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -12,11 +14,9 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.sql.*;
+import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Александр on 17.07.2016.
@@ -25,13 +25,13 @@ public class UpdateService {
 
     public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm_ss");
 
-    public static List<String> getTableNamesForUpdate() {
-        ArrayList<String> tablesForUpdate = new ArrayList<String>();
+    public static Set<String> getTableNamesForUpdate() {
+        Set<String> tablesForUpdate = new TreeSet<>();
 
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String queryString = "select tablename from for_update";
+            String queryString = "select distinct tablename from for_update;";
             ResultSet rs = statement.executeQuery(queryString);
             while (rs.next()) {
                 tablesForUpdate.add(rs.getString(1));
@@ -65,6 +65,76 @@ public class UpdateService {
         }
         return columnNames;
     }
+
+    public static List<String> getAllTablesNames() {
+        ArrayList<String> names = new ArrayList<String>();
+
+        Statement statement = null;
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+            String queryString = "SELECT ist.TABLE_NAME as table_name \n" +
+                    "FROM INFORMATION_SCHEMA.TABLES ist where TABLE_NAME not in ('query_check', 'for_update', 'pair_checks');";
+            ResultSet rs = statement.executeQuery(queryString);
+            while (rs.next()) {
+                names.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return names;
+    }
+
+    /*public static List<TableModel> getTableModel(String tableName) {
+        List<TableModel> tabls = new ArrayList<>();
+
+        Statement statement = null;
+        HashMap<String, TableModel> result = new HashMap<>();
+        try {
+            statement = ConnectionProvider.get().getConnection().createStatement();
+            String queryString = "select tablename, columnname from for_update";
+            ResultSet rs = statement.executeQuery(queryString);
+            while (rs.next()) {
+                String tablename = rs.getString("tablename");
+                String columnname = rs.getString("columnname");
+
+                TableModel model = result.get(tablename);
+
+                if (model == null) {
+                    model = new TableModel(tableName);
+                }
+
+                if (columnname == null) {
+                    model.setAddAllowed(true);
+                } else {
+                    ColumnModel column = findColumnModel(columnname, model.getColumns());
+                    boolean isNotFound = column == null;
+                    if (isNotFound) {
+                        column = new ColumnModel(columnname);
+                    }
+                    column.setEditable(true);
+                }
+                result.put(tablename, model);
+            }
+            tabls = new ArrayList<>(result.values());
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
+        }
+        return tabls;
+    }
+
+    public static ColumnModel findColumnModel(String name, List<ColumnModel> models) {
+        for (ColumnModel columnModel : models) {
+            if (columnModel.getName().equals(name)) {
+                return columnModel;
+            }
+
+        }
+        return null;
+    }*/
 
     public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
         List<String> columnNames = getTableColumns(tableName, forUpdate);
@@ -451,6 +521,39 @@ public class UpdateService {
             }
         }
         return updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName, targetColumnName);
+    }
+
+    public static void disableUpdateFor(Set<String> disableUpdateSet) throws SQLException {
+        if (disableUpdateSet == null || disableUpdateSet.isEmpty()) return;
+        String queryString = "delete from pair_checks where for_update_id in (select id from for_update where tablename=?);\n" +
+                "delete from for_update where tablename=?;";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
+            for (String tableName : disableUpdateSet) {
+                ps.setString(1, tableName);
+                ps.setString(2, tableName);
+                ps.executeUpdate();
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    public static void enableUpdateFor(Set<String> enableUpdatePatch) throws SQLException {
+        if (enableUpdatePatch == null || enableUpdatePatch.isEmpty()) return;
+        String queryString = "insert into for_update(tablename) select ? where not exists (select tablename from for_update where tablename=?) or not exists (select id from for_update) ;";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
+            for (String tableName : enableUpdatePatch) {
+                ps.setString(1, tableName);
+                ps.setString(2, tableName);
+                System.out.println("Affected " + ps.executeUpdate() + " rows.");;
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
     }
 }
 

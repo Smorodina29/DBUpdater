@@ -17,8 +17,14 @@ import static org.junit.Assert.assertTrue;
 public class UtilServiceTest {
     @Test
     public void tablesForUpdate() throws Exception {
-        List<String> expected = Arrays.asList("address", "distributors", "regions", "salepoint", "tradenet", "users", "warehouse");
-        List<String> actual = UpdateService.getTableNamesForUpdate();
+        Set<String> expected = new TreeSet<>();
+        expected.add("address");
+        expected.add("regions");
+        expected.add("salepoint");
+        expected.add("tradenet");
+        expected.add("users");
+        expected.add("warehouse");
+        Set<String> actual = UpdateService.getTableNamesForUpdate();
         assertEquals(actual, expected);
     }
 

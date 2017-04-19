@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Александр on 01.04.2017.
@@ -108,12 +109,12 @@ public class AddDataController implements TabController {
 
     @Override
     public void load() {
-        List<String> tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
+        Set<String> tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
         System.out.println("tableNamesForUpdate:" + tableNamesForUpdate);
         tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
         if (!tableNamesForUpdate.isEmpty()) {
-            tableNamesBox.setValue(tableNamesForUpdate.get(0));
+            tableNamesBox.setValue(tableNamesBox.getItems().get(0));
         }
     }
 
