@@ -23,6 +23,9 @@
                         <Tab text="Таблицы" fx:id="tablesTab">
                             <fx:include fx:id="tables" source="tabs/admin/tables.fxml"/>
                         </Tab>
+                        <Tab text="Списки" fx:id="tableSettingsTab">
+                            <fx:include fx:id="tableSettings" source="tabs/admin/tableSettings.fxml"/>
+                        </Tab>
                         <Tab text="Настройки" fx:id="settingsTab">
                             <fx:include fx:id="settings" source="tabs/admin/settings.fxml"/>
                         </Tab>
