@@ -1,7 +1,6 @@
 package com.company.ui.jfx.tabs.admin.models;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Created by Александр on 15.04.2017.
@@ -9,8 +8,8 @@ import java.util.List;
 public class TableModel {
 
     String name;
-    List<ColumnModel> columns = new ArrayList<>();
-    boolean addAllowed;
+    HashMap<String, ColumnModel> columns = new HashMap<>();
+    private boolean addAllowed;
 
     public TableModel(String name) {
         this.name = name;
@@ -20,7 +19,7 @@ public class TableModel {
         return name;
     }
 
-    public List<ColumnModel> getColumns() {
+    public HashMap<String, ColumnModel> getColumns() {
         return columns;
     }
 
@@ -30,6 +29,10 @@ public class TableModel {
 
     public void setAddAllowed(boolean addAllowed) {
         this.addAllowed = addAllowed;
+    }
+
+    public void setColumns(HashMap<String, ColumnModel> columns) {
+        this.columns = columns;
     }
 
     @Override

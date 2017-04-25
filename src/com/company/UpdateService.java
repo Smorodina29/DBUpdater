@@ -14,7 +14,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.sql.*;
-import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -86,55 +85,81 @@ public class UpdateService {
         return names;
     }
 
-    /*public static List<TableModel> getTableModel(String tableName) {
+
+    public static List<TableModel> getTablesForUpdate() throws SQLException {
         List<TableModel> tabls = new ArrayList<>();
 
-        Statement statement = null;
         HashMap<String, TableModel> result = new HashMap<>();
+        Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String queryString = "select tablename, columnname from for_update";
+            String queryString = "select id, tablename, columnname from for_update";
             ResultSet rs = statement.executeQuery(queryString);
             while (rs.next()) {
                 String tablename = rs.getString("tablename");
                 String columnname = rs.getString("columnname");
 
-                TableModel model = result.get(tablename);
+                TableModel table = result.get(tablename);
 
-                if (model == null) {
-                    model = new TableModel(tableName);
+                if (table == null) {
+                    table = new TableModel(tablename);
+                    table.setColumns(filterIdColumn(getAllColumnsModelsFor(tablename)));
                 }
 
                 if (columnname == null) {
-                    model.setAddAllowed(true);
+                    table.setAddAllowed(true);
                 } else {
-                    ColumnModel column = findColumnModel(columnname, model.getColumns());
+                    ColumnModel column = table.getColumns().get(columnname);
                     boolean isNotFound = column == null;
                     if (isNotFound) {
+                        /* in case when column was deleted from table.
+                        * */
                         column = new ColumnModel(columnname);
                     }
                     column.setEditable(true);
+                    column.getChecks().addAll(ChecksService.getChecksForUpdate(tablename, columnname));
+                    column.setForUpdateId(rs.getInt("id"));
                 }
-                result.put(tablename, model);
+                result.put(tablename, table);
             }
             tabls = new ArrayList<>(result.values());
-        } catch (SQLException e) {
-            System.out.println("Error:" + e);
-        } finally {
+        }  finally {
             Utils.closeQuietly(statement);
         }
         return tabls;
     }
 
-    public static ColumnModel findColumnModel(String name, List<ColumnModel> models) {
-        for (ColumnModel columnModel : models) {
-            if (columnModel.getName().equals(name)) {
-                return columnModel;
-            }
+    private static HashMap<String, ColumnModel> filterIdColumn(HashMap<String, ColumnModel> map) {
+        map.remove("id");
+        map.remove("ID");
+        return map;
+    }
 
+
+    /**
+    * returns all columns of table. isEditable is not checked
+    * */
+    private static HashMap<String, ColumnModel> getAllColumnsModelsFor(String tablename) {
+        HashMap<String, ColumnModel> result = new HashMap<>();
+
+        PreparedStatement statement = null;
+        try {
+            statement = ConnectionProvider.get().getConnection().prepareStatement("select isc.COLUMN_NAME as column_name from INFORMATION_SCHEMA.COLUMNS isc where isc.TABLE_NAME = ?");
+            statement.setString(1, tablename);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                String columnName = rs.getString("column_name");
+                result.put(columnName, new ColumnModel(columnName));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error:" + e);
+        } finally {
+            Utils.closeQuietly(statement);
         }
-        return null;
-    }*/
+
+        return result;
+    }
+
 
     public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
         List<String> columnNames = getTableColumns(tableName, forUpdate);

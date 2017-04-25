@@ -148,7 +148,7 @@ public class ChecksController implements TabController {
                             btn.setOnAction(new EventHandler<ActionEvent>() {
                                 @Override
                                 public void handle(ActionEvent event) {
-                                    System.out.println("Clicked edit on " + item);
+                                    System.out.println("Clicked delete on " + item);
                                     onDeleteClick(item);
                                 }
                             });

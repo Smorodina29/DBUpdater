@@ -1,12 +1,21 @@
 package com.company.ui.jfx.tabs.admin.models;
 
+import com.company.check.Check;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Александр on 15.04.2017.
  */
 public class ColumnModel {
 
     String name;
+    String table;
     boolean editable;
+    List<Check> checks = new ArrayList<>();
+
+    int forUpdateId;
 
     public ColumnModel(String name) {
         this.name = name;
@@ -24,6 +33,22 @@ public class ColumnModel {
         this.editable = editable;
     }
 
+    public List<Check> getChecks() {
+        return checks;
+    }
+
+    public void setChecks(List<Check> checks) {
+        this.checks = checks;
+    }
+
+    public int getForUpdateId() {
+        return forUpdateId;
+    }
+
+    public void setForUpdateId(int forUpdateId) {
+        this.forUpdateId = forUpdateId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -31,18 +56,17 @@ public class ColumnModel {
 
         ColumnModel that = (ColumnModel) o;
 
-        if (editable != that.editable) return false;
-        return name != null ? name.equals(that.name) : that.name == null;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        return table != null ? table.equals(that.table) : that.table == null;
 
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (editable ? 1 : 0);
+        result = 31 * result + (table != null ? table.hashCode() : 0);
         return result;
     }
-
 
     @Override
     public String toString() {

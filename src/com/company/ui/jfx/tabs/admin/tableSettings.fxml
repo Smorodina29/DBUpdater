@@ -32,17 +32,17 @@
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </HBox.margin>
                   </Label>
-                  <ComboBox prefWidth="250.0">
+                  <ComboBox fx:id="tablesBox" prefWidth="250.0">
                      <HBox.margin>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </HBox.margin>
                   </ComboBox>
                </children>
             </HBox>
-            <TableView prefWidth="200.0">
+            <TableView fx:id="columnsView" prefWidth="200.0" editable="true">
               <columns>
-                <TableColumn prefWidth="75.0" text="Ред." />
-                <TableColumn minWidth="100.0" prefWidth="500.0" text="Название колонки" />
+                <TableColumn fx:id="columnNameColumn"  minWidth="100.0" prefWidth="440.0" text="Название колонки" />
+                  <TableColumn fx:id="checkboxColumn" prefWidth="150.0" text="Разрешить обновление" editable="true"/>
               </columns>
             </TableView>
          </children>
@@ -53,14 +53,14 @@
         <content>
           <VBox prefHeight="200.0" prefWidth="483.0">
                <children>
-                  <TableView prefHeight="145.0" prefWidth="605.0">
+                  <TableView fx:id="checksView" prefHeight="145.0" prefWidth="605.0">
                     <columns>
-                      <TableColumn prefWidth="400.0" text="Название" />
-                      <TableColumn prefWidth="75.0" text="Тип" />
-                      <TableColumn prefWidth="75.0" text="Удаление" />
+                      <TableColumn fx:id="checkNameColumn" prefWidth="400.0" text="Название проверки" />
+                      <TableColumn fx:id="checkTypeColumn" prefWidth="75.0" text="Тип" />
+                      <TableColumn fx:id="deleteCheckColumn" prefWidth="75.0" text="Удаление" />
                     </columns>
                   </TableView>
-                  <Button mnemonicParsing="false" text="Добавить проверку">
+                  <Button fx:id="addCheckButton" mnemonicParsing="false" text="Добавить проверку" disable="true" onAction="#addCheck">
                      <VBox.margin>
                         <Insets top="10.0" />
                      </VBox.margin>

@@ -55,6 +55,7 @@ public class AppController {
         adminTabs = new ArrayList<>();
         adminTabs.add(checksTab);
         adminTabs.add(tablesTab);
+        adminTabs.add(tableSettingsTab);
         adminTabs.add(settingsTab);
         hide(adminTabs);
 
