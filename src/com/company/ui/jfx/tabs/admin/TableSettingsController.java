@@ -340,12 +340,36 @@ public class TableSettingsController implements TabController, Initializable {
             System.out.println("Clicked save, although data patch is empty. ");
             saveButton.setDisable(true);
         } else {
-            System.out.println("Data patch:");
+            System.out.println("Start applying patch:");
             System.out.println("Enabled columns:" + enableUpdatePatch);
             System.out.println("Disabled columns:" + disableUpdatePatch);
             System.out.println("Added checks:" + addCheckPatch);
             System.out.println("Removed checks:" + deleteCheckPatch);
             System.out.println("========================");
+
+
+            System.out.println("Start ");
+
+            try {
+                UpdateService.disableColumns(disableUpdatePatch);
+                disableUpdatePatch.clear();
+                UpdateService.enableColumns(enableUpdatePatch);
+                enableUpdatePatch.clear();
+
+                UpdateService.deleteChecks(deleteCheckPatch);
+                deleteCheckPatch.clear();
+
+                UpdateService.addChecks(addCheckPatch);
+                addCheckPatch.clear();
+
+                System.out.println("Applied patch.");
+                load();
+            } catch (SQLException e) {
+                new Alert(Alert.AlertType.ERROR, "Произошла ошибка во время сохранения:" + e.getMessage(), ButtonType.OK).show();
+                System.out.println("Failed to save patch: " + e.getMessage());
+                e.printStackTrace();
+            }
+
             /*System.out.println("Start applying patch: disabled=" + disableUpdatePatch + "; enabled=" + enableUpdatePatch);
 
             try {

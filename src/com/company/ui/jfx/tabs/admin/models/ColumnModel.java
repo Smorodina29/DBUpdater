@@ -16,9 +16,11 @@ public class ColumnModel {
     List<Check> checks = new ArrayList<>();
 
     int forUpdateId;
+    public static final String SPECIAL_KEY = "Добавление";
 
-    public ColumnModel(String name) {
+    public ColumnModel(String name, String tablename) {
         this.name = name;
+        this.table = tablename;
     }
 
     public String getName() {
@@ -49,6 +51,14 @@ public class ColumnModel {
         this.forUpdateId = forUpdateId;
     }
 
+    public String getTable() {
+        return table;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -74,5 +84,9 @@ public class ColumnModel {
                 "name='" + name + '\'' +
                 ", editable=" + editable +
                 '}';
+    }
+
+    public boolean isSpecialColumnRepresentsTable() {
+        return SPECIAL_KEY.equalsIgnoreCase(getName());
     }
 }

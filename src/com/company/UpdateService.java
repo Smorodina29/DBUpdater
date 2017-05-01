@@ -101,12 +101,12 @@ public class UpdateService {
 
                 TableModel table = result.get(tablename);
 
-                String specialColumnKey = "Добавление";
+                String specialColumnKey = ColumnModel.SPECIAL_KEY;
 
                 if (table == null) {
                     table = new TableModel(tablename);
                     table.setColumns(filterIdColumn(getAllColumnsModelsFor(tablename)));
-                    table.getColumns().put(specialColumnKey, new ColumnModel(specialColumnKey));
+                    table.getColumns().put(specialColumnKey, new ColumnModel(specialColumnKey, tablename));
                 }
 
                 if (columnname == null) {
@@ -123,7 +123,7 @@ public class UpdateService {
                     if (isNotFound) {
                         /* in case when column was deleted from table.
                         * */
-                        column = new ColumnModel(columnname);
+                        column = new ColumnModel(columnname, tablename);
                     }
                     column.setEditable(true);
                     column.getChecks().addAll(ChecksService.getChecksForUpdate(tablename, columnname));
@@ -158,7 +158,7 @@ public class UpdateService {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 String columnName = rs.getString("column_name");
-                result.put(columnName, new ColumnModel(columnName));
+                result.put(columnName, new ColumnModel(columnName, tablename));
             }
         } catch (SQLException e) {
             System.out.println("Error:" + e);
@@ -584,6 +584,122 @@ public class UpdateService {
                 ps.setString(1, tableName);
                 ps.setString(2, tableName);
                 System.out.println("Affected " + ps.executeUpdate() + " rows.");;
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    public static void deleteChecks(Map<ColumnModel, List<Check>> deleteCheckPatch) throws SQLException {
+        if (deleteCheckPatch == null || deleteCheckPatch.isEmpty()) return;
+        String queryString = "delete from pair_checks where pair_checks.for_update_id = ? and pair_checks.query_check_id = ?;";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
+
+            for (Map.Entry<ColumnModel, List<Check>> entry : deleteCheckPatch.entrySet()) {
+                ColumnModel columnModel = entry.getKey();
+                List<Check> checks = entry.getValue();
+
+                for (Check check : checks) {
+                    if (check.getId() == null || columnModel.getForUpdateId() <= 0) {
+                        System.out.println("Skip deleting unknown case column=" + columnModel + " | " + check + "!");
+                        continue;
+                    }
+                    check.getId();
+                    columnModel.getForUpdateId();
+                    ps.setInt(1, columnModel.getForUpdateId());
+                    ps.setString(2, check.getId());
+                    System.out.println("Affected " + ps.executeUpdate() + " rows.");;
+                }
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    public static void addChecks(Map<ColumnModel, List<Check>> addCheckPatch) throws SQLException {
+        if (addCheckPatch == null || addCheckPatch.isEmpty()) return;
+        String queryString = "insert into pair_checks(for_update_id, query_check_id) values(?, ?);";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
+
+            for (Map.Entry<ColumnModel, List<Check>> entry : addCheckPatch.entrySet()) {
+                ColumnModel columnModel = entry.getKey();
+                List<Check> checks = entry.getValue();
+
+                for (Check check : checks) {
+                    if (check.getId() == null || columnModel.getForUpdateId() <= 0) {
+                        System.out.println("Skip adding unknown case column=" + columnModel + " | " + check + "!");
+                        continue;
+                    }
+                    check.getId();
+                    columnModel.getForUpdateId();
+                    ps.setInt(1, columnModel.getForUpdateId());
+                    ps.setString(2, check.getId());
+
+                    System.out.println("Affected " + ps.executeUpdate() + " rows.");;
+                }
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    public static void disableColumns(List<ColumnModel> disableUpdatePatch) throws SQLException {
+        if (disableUpdatePatch == null || disableUpdatePatch.isEmpty()) {
+            return;
+        }
+
+        String queryString = "delete from pair_checks where for_update_id=;\n" +
+                "delete from for_update where tablename=? and columnname=?;";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
+
+            for (ColumnModel column : disableUpdatePatch) {
+                if (column.isSpecialColumnRepresentsTable()) {
+                    System.out.println("Disabled adding to table " + column.getTable());
+                    HashSet<String> set = new HashSet<>();
+                    set.add(column.getTable());
+                    disableUpdateFor(set);
+                } else {
+                    ps.setInt(1, column.getForUpdateId());
+                    ps.setString(2, column.getTable());
+                    ps.setString(3, column.getName());
+                    System.out.println("Affected " + ps.executeUpdate() + " rows.");;
+                }
+            }
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    public static void enableColumns(List<ColumnModel> enableUpdatePatch) throws SQLException {
+        if (enableUpdatePatch == null || enableUpdatePatch.isEmpty()) {
+            return;
+        }
+
+        String queryString = "insert into for_update(tablename, columnname) values (?, ?)";
+        PreparedStatement ps = null;
+        try {
+            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
+
+            for (ColumnModel column : enableUpdatePatch) {
+                if (column.isSpecialColumnRepresentsTable()) {
+                    System.out.println("Enabled adding to table " + column.getTable());
+                    HashSet<String> set = new HashSet<>();
+                    set.add(column.getTable());
+                    enableUpdateFor(set);
+                } else {
+                    ps.setInt(1, column.getForUpdateId());
+                    ps.setString(2, column.getTable());
+                    int affected = ps.executeUpdate();
+                    int addedId = ps.getGeneratedKeys().getInt(1);
+                    column.setForUpdateId(addedId);
+                    System.out.println("Affected " + affected + " rows.");;
+                }
             }
         } finally {
             Utils.closeQuietly(ps);
