@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox minHeight="0.0" minWidth="0.0" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/null" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.company.ui.jfx.editors.adding.SelectCheckDialogController">
+    <children>
+        <Label text="Выберите проверку:">
+            <padding>
+                <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+        </Label>
+        <TableView fx:id="checksView">
+            <columns>
+                <TableColumn fx:id="checkNameColumn" prefWidth="500.0" text="Название проверки" />
+                <TableColumn fx:id="checkTypeColumn" prefWidth="100.0" text="Тип" />
+                <TableColumn fx:id="validationTypeColumn" prefWidth="150.0" text="Способ проверки" />
+            </columns>
+        </TableView>
+    </children>
+</VBox>

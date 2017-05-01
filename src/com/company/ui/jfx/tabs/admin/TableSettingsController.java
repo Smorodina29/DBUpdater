@@ -1,9 +1,12 @@
 package com.company.ui.jfx.tabs.admin;
 
+import com.company.ChecksService;
 import com.company.Column;
 import com.company.UpdateService;
 import com.company.check.Check;
 import com.company.check.CheckType;
+import com.company.ui.jfx.editors.EditCallback;
+import com.company.ui.jfx.editors.adding.SelectCheckDialog;
 import com.company.ui.jfx.tabs.TabController;
 import com.company.ui.jfx.tabs.admin.models.ColumnModel;
 import com.company.ui.jfx.tabs.admin.models.TableModel;
@@ -22,6 +25,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.util.Callback;
 
 import java.net.URL;
@@ -45,11 +49,13 @@ public class TableSettingsController implements TabController, Initializable {
     public TableColumn<Check, CheckType> checkTypeColumn;
     public TableColumn<Check, Check> deleteCheckColumn;
     public Button addCheckButton;
+    public BorderPane root;
 
     private Map<ColumnModel, List<Check>> deleteCheckPatch = new HashMap<>();
     private Map<ColumnModel, List<Check>> addCheckPatch = new HashMap<>();
     private List<ColumnModel> enableUpdatePatch = new ArrayList<>();
     private List<ColumnModel> disableUpdatePatch = new ArrayList<>();
+    private List<Check> availableChecks = null;
 
 
     @Override
@@ -351,5 +357,53 @@ public class TableSettingsController implements TabController, Initializable {
 
     public void addCheck(ActionEvent event) {
         System.out.println("Cleicked addd");
+
+        try {
+            boolean isNotLoaded = availableChecks == null;
+            if (isNotLoaded) {
+                availableChecks = ChecksService.loadChecks();
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to load checks: " + e.getMessage());
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Нe удалось загрузить список проверок. Ошибка: " + e.getMessage(), ButtonType.OK).show();
+        }
+
+        if (availableChecks != null) {
+            SelectCheckDialog dialog = new SelectCheckDialog();
+
+
+            //maybe filter already added checks in this column
+            dialog.open(root.getScene().getWindow(), availableChecks, new EditCallback<Check>() {
+                @Override
+                public void onFinish(Check selected) {
+                    System.out.println("User selected:" + selected);
+                    ColumnModel selectedColumn = columnsView.getSelectionModel().getSelectedItem();
+                    if (selectedColumn == null) {
+                        System.out.println("Warning! User clicked on select check when there is no one column selected");
+                    } else {
+                        List<Check> added = addCheckPatch.get(selectedColumn);
+                        if (added == null) {
+                            added = new ArrayList<>();
+                        }
+                        added.add(selected);
+                        deleteCheckPatch.put(selectedColumn, added);
+                    }
+                    checksView.getItems().add(selected);
+                    saveButton.setDisable(isDataPatchEmpty());
+                }
+
+                @Override
+                public void onCancel() {
+                    System.out.println("User cancelled adding new check.");
+                }
+            });
+        } else {
+            System.out.println("Skip open dialog cause checks list is not initialized...");
+        }
+
+
+
+
     }
 }
