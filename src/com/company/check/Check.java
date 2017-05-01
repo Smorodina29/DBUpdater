@@ -26,7 +26,11 @@ public abstract class Check {
     }
 
      public String getSqlQuery(String tempTableName, String targetTableName, String columnName){
-         return getQueryText().replace(TEMP_TABLE_PLACEHOLDER, tempTableName).replace(TARGET_TABLE_PLACEHOLDER, targetTableName).replace(COLUMN_NAME_PLACEHOLDER, columnName);
+         String replaced = getQueryText().replace(TEMP_TABLE_PLACEHOLDER, tempTableName).replace(TARGET_TABLE_PLACEHOLDER, targetTableName);
+         if (columnName != null) {
+             replaced = replaced.replace(COLUMN_NAME_PLACEHOLDER, columnName);
+         }
+         return replaced;
      }
 
     public String getId() {

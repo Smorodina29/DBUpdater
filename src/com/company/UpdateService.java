@@ -108,6 +108,13 @@ public class UpdateService {
 
                 if (columnname == null) {
                     table.setAddAllowed(true);
+                    String key = "Добавление";
+                    ColumnModel addColumn = new ColumnModel(key);
+                    addColumn.setEditable(true);
+                    addColumn.setForUpdateId(rs.getInt("id"));
+
+                    addColumn.getChecks().addAll(ChecksService.getChecksForAdd(tablename));
+                    table.getColumns().put(key, addColumn);
                 } else {
                     ColumnModel column = table.getColumns().get(columnname);
                     boolean isNotFound = column == null;

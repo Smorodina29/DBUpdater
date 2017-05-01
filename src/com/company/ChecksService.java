@@ -26,13 +26,16 @@ public class ChecksService {
             tableName = "'" + tableName + "'";
         }
 
-        if (columnName != null) {
-            columnName = "'" + columnName + "'";
+        if (columnName == null) {
+            columnName = "is null";
+        } else {
+            columnName = " = \'" + columnName + "\'";
+
         }
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
             String queryString = String.format("select q.id as id, q.query_text as query_text, q.name as name, q.message_text as message_text, q.check_type as check_type, q.validation_type as validation_type\n" +
-                    " from query_check q join pair_checks p on p.query_check_id=q.id join for_update f on f.id=p.for_update_id where f.tablename=%s and f.columnname=%s;", tableName, columnName);
+                    " from query_check q join pair_checks p on p.query_check_id=q.id join for_update f on f.id=p.for_update_id where f.tablename=%s and f.columnname %s;", tableName, columnName);
 
             System.out.println("query to get checks=\'" + queryString + "\'");
             ResultSet rs = statement.executeQuery(queryString);
