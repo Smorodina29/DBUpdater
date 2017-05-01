@@ -400,7 +400,7 @@ public class TableSettingsController implements TabController, Initializable {
                             added = new ArrayList<>();
                         }
                         added.add(selected);
-                        deleteCheckPatch.put(selectedColumn, added);
+                        addCheckPatch.put(selectedColumn, added);
                     }
                     checksView.getItems().add(selected);
                     saveButton.setDisable(isDataPatchEmpty());
@@ -414,9 +414,5 @@ public class TableSettingsController implements TabController, Initializable {
         } else {
             System.out.println("Skip open dialog cause checks list is not initialized...");
         }
-
-
-
-
     }
 }
