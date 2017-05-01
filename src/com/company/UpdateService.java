@@ -101,20 +101,22 @@ public class UpdateService {
 
                 TableModel table = result.get(tablename);
 
+                String specialColumnKey = "Добавление";
+
                 if (table == null) {
                     table = new TableModel(tablename);
                     table.setColumns(filterIdColumn(getAllColumnsModelsFor(tablename)));
+                    table.getColumns().put(specialColumnKey, new ColumnModel(specialColumnKey));
                 }
 
                 if (columnname == null) {
                     table.setAddAllowed(true);
-                    String key = "Добавление";
-                    ColumnModel addColumn = new ColumnModel(key);
+                    ColumnModel addColumn = table.getColumns().get(specialColumnKey);
                     addColumn.setEditable(true);
                     addColumn.setForUpdateId(rs.getInt("id"));
 
                     addColumn.getChecks().addAll(ChecksService.getChecksForAdd(tablename));
-                    table.getColumns().put(key, addColumn);
+                    table.getColumns().put(specialColumnKey, addColumn);
                 } else {
                     ColumnModel column = table.getColumns().get(columnname);
                     boolean isNotFound = column == null;
