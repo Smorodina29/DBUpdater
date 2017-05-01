@@ -297,7 +297,7 @@ public class UpdateService {
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String query = String.format("update %s set %s = u.%s from %s u join %s s on u.id = s.id", targetTableName, targetColumnName, targetColumnName, tempTableName, tempColumnName);
+            String query = String.format("update %s set %s = u.%s from %s u join %s s on u.id = s.id", targetTableName, targetColumnName, targetColumnName, tempTableName, targetTableName);
             System.out.println("Query for update: `" + query + "\'");
             result = statement.executeUpdate(query);
         } catch (SQLException e) {
