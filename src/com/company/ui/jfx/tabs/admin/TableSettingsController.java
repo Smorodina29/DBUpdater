@@ -291,7 +291,8 @@ public class TableSettingsController implements TabController, Initializable {
         List<TableModel> tableModels = new ArrayList<>();
         try {
             tableModels = UpdateService.getTablesForUpdate();
-        } catch (SQLException e) {
+        } catch (Throwable e) {
+            new Alert(Alert.AlertType.ERROR, "Нe удалось получить информацию о списках проверок в таблицах. Ошибка: " + e.getMessage(), ButtonType.OK).show();
             System.out.println("Failed to load tables: " + e.getMessage());
             e.printStackTrace();
         }

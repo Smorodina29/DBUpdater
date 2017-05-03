@@ -204,7 +204,7 @@ public class ChecksController implements TabController {
         List<Check> checks = new ArrayList<>();
         try {
             checks = ChecksService.loadChecks();
-        } catch (SQLException e) {
+        } catch (Throwable e) {
             System.out.println("Failed to load checks: " + e.getMessage());
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Нe удалось загрузить список проверок. Ошибка: " + e.getMessage(), ButtonType.OK).show();

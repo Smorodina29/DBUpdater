@@ -14,10 +14,7 @@ import javafx.scene.control.ListView;
 
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Александр on 01.04.2017.
@@ -34,8 +31,8 @@ public class TablesController implements TabController, Initializable {
 
     private Set<String> disableUpdatePatch = new HashSet<>();
     private Set<String> enableUpdatePatch = new HashSet<>();
-    private List<String> initialAllTablesNamesList;
-    private Set<String> initialUpdatableSet;
+    private List<String> initialAllTablesNamesList= new ArrayList<>();
+    private Set<String> initialUpdatableSet= new HashSet<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -63,8 +60,12 @@ public class TablesController implements TabController, Initializable {
 
     @Override
     public void load() {
-        initialAllTablesNamesList = UpdateService.getAllTablesNames();
-        initialUpdatableSet = UpdateService.getTableNamesForUpdate();
+        try {
+            initialAllTablesNamesList = UpdateService.getAllTablesNames();
+            initialUpdatableSet = UpdateService.getTableNamesForUpdate();
+        } catch (Throwable e) {
+            new Alert(Alert.AlertType.ERROR, "Нe удалось получить список таблиц. Ошибка: " + e.getMessage(), ButtonType.OK).show();
+        }
 
         initialAllTablesNamesList.removeAll(initialUpdatableSet);//filter already initialUpdatableSet
 

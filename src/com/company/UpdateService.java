@@ -24,7 +24,7 @@ public class UpdateService {
 
     public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm_ss");
 
-    public static Set<String> getTableNamesForUpdate() {
+    public static Set<String> getTableNamesForUpdate() throws Throwable {
         Set<String> tablesForUpdate = new TreeSet<>();
 
         Statement statement = null;
@@ -35,8 +35,6 @@ public class UpdateService {
             while (rs.next()) {
                 tablesForUpdate.add(rs.getString(1));
             }
-        } catch (SQLException e) {
-            System.out.println("Error:" + e);
         } finally {
             Utils.closeQuietly(statement);
         }
@@ -65,7 +63,7 @@ public class UpdateService {
         return columnNames;
     }
 
-    public static List<String> getAllTablesNames() {
+    public static List<String> getAllTablesNames() throws Throwable {
         ArrayList<String> names = new ArrayList<String>();
 
         Statement statement = null;
@@ -77,16 +75,14 @@ public class UpdateService {
             while (rs.next()) {
                 names.add(rs.getString(1));
             }
-        } catch (SQLException e) {
-            System.out.println("Error:" + e);
-        } finally {
+        }  finally {
             Utils.closeQuietly(statement);
         }
         return names;
     }
 
 
-    public static List<TableModel> getTablesForUpdate() throws SQLException {
+    public static List<TableModel> getTablesForUpdate() throws Throwable {
         List<TableModel> tabls = new ArrayList<>();
 
         HashMap<String, TableModel> result = new HashMap<>();

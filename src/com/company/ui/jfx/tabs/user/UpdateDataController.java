@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -84,8 +85,16 @@ public class UpdateDataController implements TabController {
 
     @Override
     public void load() {
-        Set<String> tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
-        System.out.println("TableNamesForAdd:" + tableNamesForUpdate);
+        Set<String> tableNamesForUpdate = new HashSet<>();
+        try {
+            tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
+            System.out.println("Loaded tables for update:" + tableNamesForUpdate);
+        } catch (Throwable e) {
+            System.out.println("Failed to load table names for update:" + e.getMessage());
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Нe удалось получить список доступных на обновление таблиц. Ошибка: " + e.getMessage(), ButtonType.OK).show();
+        }
+
         tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
         if (!tableNamesForUpdate.isEmpty()) {

@@ -16,7 +16,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class UtilServiceTest {
     @Test
-    public void tablesForUpdate() throws Exception {
+    public void tablesForUpdate() throws Throwable {
         Set<String> expected = new TreeSet<>();
         expected.add("address");
         expected.add("regions");

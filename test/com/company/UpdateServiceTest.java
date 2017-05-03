@@ -11,7 +11,7 @@ public class UpdateServiceTest {
 
 
     @Test
-    public void selectionAll() {
+    public void selectionAll() throws Throwable {
         List<String> allTables = UpdateService.getAllTablesNames();
 
         System.out.println("Tables:");
