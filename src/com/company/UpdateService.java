@@ -22,15 +22,26 @@ import java.util.*;
  */
 public class UpdateService {
 
-    public  static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm_ss");
+    private static  final SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy_hh_mm_ss");
+
+    public static Set<String> getTableNamesForAdd() throws Throwable {
+        return getTableNamesBy("select distinct tablename from for_update where columnname is null;");
+    }
 
     public static Set<String> getTableNamesForUpdate() throws Throwable {
+        return getTableNamesBy("select distinct tablename from for_update where columnname is not null;");
+    }
+
+    public static Set<String> getAllTableNamesFromForUpdate() throws Throwable {
+        return getTableNamesBy("select distinct tablename from for_update;");
+    }
+
+    private static Set<String> getTableNamesBy(String queryString) throws Throwable {
         Set<String> tablesForUpdate = new TreeSet<>();
 
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String queryString = "select distinct tablename from for_update;";
             ResultSet rs = statement.executeQuery(queryString);
             while (rs.next()) {
                 tablesForUpdate.add(rs.getString(1));
@@ -41,19 +52,16 @@ public class UpdateService {
         return tablesForUpdate;
     }
 
-    public static List<String> getTableColumns(String tableName, boolean forUpdate) {
+    public static List<String> getTableColumns(String tableName) {
         ArrayList<String> columnNames = new ArrayList<String>();
 
         Statement statement = null;
         try {
             statement = ConnectionProvider.get().getConnection().createStatement();
-            String queryString = String.format("select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='%s'", tableName);
+            String queryString = String.format("select columnname from for_update where tablename='%s' and columnname is not null;", tableName);
             ResultSet rs = statement.executeQuery(queryString);
             while (rs.next()) {
-                String name = rs.getString(1);
-                if (forUpdate || !name.equalsIgnoreCase("id")){
-                    columnNames.add(name);
-                }
+                columnNames.add(rs.getString(1));
             }
         } catch (SQLException e) {
             System.out.println("Error:" + e);
@@ -107,12 +115,12 @@ public class UpdateService {
 
                 if (columnname == null) {
                     table.setAddAllowed(true);
-                    ColumnModel addColumn = table.getColumns().get(specialColumnKey);
-                    addColumn.setEditable(true);
-                    addColumn.setForUpdateId(rs.getInt("id"));
+                    ColumnModel specialColumnForAddToTable = table.getColumns().get(specialColumnKey);
+                    specialColumnForAddToTable.setEditable(true);
+                    specialColumnForAddToTable.setForUpdateId(rs.getInt("id"));
 
-                    addColumn.getChecks().addAll(ChecksService.getChecksForAdd(tablename));
-                    table.getColumns().put(specialColumnKey, addColumn);
+                    specialColumnForAddToTable.getChecks().addAll(ChecksService.getChecksForAdd(tablename));
+                    table.getColumns().put(specialColumnKey, specialColumnForAddToTable);
                 } else {
                     ColumnModel column = table.getColumns().get(columnname);
                     boolean isNotFound = column == null;
@@ -166,9 +174,13 @@ public class UpdateService {
     }
 
 
-    public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
-        List<String> columnNames = getTableColumns(tableName, forUpdate);
-        System.out.println("Columns for export: \'" + tableName + "\':" + columnNames + ". For_update:" + forUpdate);
+    public static void exportTableToFile(String tableName, String path, boolean forAdd) {
+        List<String> columnNames = getTableColumns(tableName);
+        if (forAdd) {
+            columnNames.add(0, "ID");
+        }
+
+        System.out.println("Columns for export: \'" + tableName + "\':" + columnNames + ". For_update:" + forAdd);
         HSSFWorkbook book = new HSSFWorkbook();
         HSSFRow row = book.createSheet(tableName).createRow(0);
         for (int i = 0; i < columnNames.size(); i++) {
@@ -647,26 +659,49 @@ public class UpdateService {
         if (disableUpdatePatch == null || disableUpdatePatch.isEmpty()) {
             return;
         }
-
-        String queryString = "delete from pair_checks where for_update_id=;\n" +
-                "delete from for_update where tablename=? and columnname=?;";
-        PreparedStatement ps = null;
+        Connection connection = null;
         try {
-            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
-
+            connection = ConnectionProvider.get().getConnection();
             for (ColumnModel column : disableUpdatePatch) {
                 if (column.isSpecialColumnRepresentsTable()) {
-                    System.out.println("Disabled adding to table " + column.getTable());
-                    HashSet<String> set = new HashSet<>();
-                    set.add(column.getTable());
-                    disableUpdateFor(set);
+                    disableAddingToTable(column.getTable(), column.getForUpdateId(), connection);
                 } else {
-                    ps.setInt(1, column.getForUpdateId());
-                    ps.setString(2, column.getTable());
-                    ps.setString(3, column.getName());
-                    System.out.println("Affected " + ps.executeUpdate() + " rows.");;
+                    disableUpdate(column, connection);
                 }
             }
+        } finally {
+            Utils.closeQuietly(connection);
+        }
+    }
+
+    private static void disableAddingToTable(String table, int forUpdateId, Connection connection) throws SQLException {
+        String queryString = "delete from pair_checks where for_update_id=?;\n" +
+                "delete from for_update where tablename=? and columnname is null;";
+
+        PreparedStatement ps = null;
+        try {
+            ps = connection.prepareStatement(queryString);
+            ps.setInt(1, forUpdateId);
+            ps.setString(2, table);
+            System.out.println("Affected " + ps.executeUpdate() + " rows.");
+            System.out.println("Disabled adding to table \'" + table + "\'");
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+    private static void disableUpdate(ColumnModel column, Connection connection) throws SQLException {
+        String queryString = "delete from pair_checks where for_update_id=?;\n" +
+                "delete from for_update where tablename=? and columnname=?;";
+
+        PreparedStatement ps = null;
+        try {
+            ps = connection.prepareStatement(queryString);
+            ps.setInt(1, column.getForUpdateId());
+            ps.setString(2, column.getTable());
+            ps.setString(3, column.getName());
+            ps.executeUpdate();
+            System.out.println("Disabled update for " + column);
         } finally {
             Utils.closeQuietly(ps);
         }
@@ -677,30 +712,56 @@ public class UpdateService {
             return;
         }
 
-        String queryString = "insert into for_update(tablename, columnname) values (?, ?)";
-        PreparedStatement ps = null;
+        Connection connection = null;
         try {
-            ps = ConnectionProvider.get().getConnection().prepareStatement(queryString);
-
+            connection = ConnectionProvider.get().getConnection();
             for (ColumnModel column : enableUpdatePatch) {
                 if (column.isSpecialColumnRepresentsTable()) {
-                    System.out.println("Enabled adding to table " + column.getTable());
-                    HashSet<String> set = new HashSet<>();
-                    set.add(column.getTable());
-                    enableUpdateFor(set);
+                    enableAddingToTable(column, connection);
                 } else {
-                    ps.setInt(1, column.getForUpdateId());
-                    ps.setString(2, column.getTable());
-                    int affected = ps.executeUpdate();
-                    int addedId = ps.getGeneratedKeys().getInt(1);
-                    column.setForUpdateId(addedId);
-                    System.out.println("Affected " + affected + " rows.");;
+                    enableUpdate(column, connection);
                 }
             }
+        } finally {
+            Utils.closeQuietly(connection);
+        }
+    }
+
+    private static void enableUpdate(ColumnModel column, Connection connection) throws SQLException {
+        String queryString = "insert into for_update(tablename, columnname) values (?, ?)";
+
+        PreparedStatement ps = null;
+        try {
+            ps = connection.prepareStatement(queryString);
+            ps.setInt(1, column.getForUpdateId());
+            ps.setString(2, column.getTable());
+            ps.executeUpdate();
+            int addedId = ps.getGeneratedKeys().getInt(1);
+            column.setForUpdateId(addedId);
+            System.out.println("Enabled update for " + column);
         } finally {
             Utils.closeQuietly(ps);
         }
     }
+
+    private static void enableAddingToTable(ColumnModel column, Connection connection) throws SQLException {
+        String queryString = "insert into for_update(tablename) values (?)";
+
+        PreparedStatement ps = null;
+        try {
+            ps = connection.prepareStatement(queryString);
+            ps.setString(1, column.getTable());
+            ps.executeUpdate();
+            int addedId = ps.getGeneratedKeys().getInt(1);
+            column.setForUpdateId(addedId);
+            System.out.println("Enable update for " + column);
+        } finally {
+            Utils.closeQuietly(ps);
+        }
+    }
+
+
+
 }
 
 

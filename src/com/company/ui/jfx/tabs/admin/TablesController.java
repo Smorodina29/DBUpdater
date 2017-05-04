@@ -62,7 +62,7 @@ public class TablesController implements TabController, Initializable {
     public void load() {
         try {
             initialAllTablesNamesList = UpdateService.getAllTablesNames();
-            initialUpdatableSet = UpdateService.getTableNamesForUpdate();
+            initialUpdatableSet = UpdateService.getAllTableNamesFromForUpdate();
         } catch (Throwable e) {
             new Alert(Alert.AlertType.ERROR, "Нe удалось получить список таблиц. Ошибка: " + e.getMessage(), ButtonType.OK).show();
         }

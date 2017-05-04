@@ -296,19 +296,7 @@ public class TableSettingsController implements TabController, Initializable {
             System.out.println("Failed to load tables: " + e.getMessage());
             e.printStackTrace();
         }
-        /*tableModels.sort(new Comparator<TableModel>() {
-            @Override
-            public int compare(TableModel o1, TableModel o2) {
-                String addKey = "Добавление";
-                if (addKey.equalsIgnoreCase(o1.getName())) {
-                    return -1;
-                } else if (addKey.equalsIgnoreCase(o2.getName())) {
-                    return 1;
-                } else {
-                    return o1.getName().compareTo(o2.getName());
-                }
-            }
-        });*/
+
         System.out.println("Loaded "  + tableModels.size() + " tables available for update: " + tableModels);
         tablesBox.getItems().clear();
         tablesBox.getItems().addAll(tableModels);

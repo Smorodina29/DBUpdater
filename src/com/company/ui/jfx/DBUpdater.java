@@ -30,7 +30,6 @@ public class DBUpdater extends Application {
         primaryStage.getIcons().add(e);
         AppController controller = fxmlLoader.<AppController>getController();
 
-
         //start login
         LoginDialog loginDialog = new LoginDialog();
         loginDialog.initOwner(root.getScene().getWindow());

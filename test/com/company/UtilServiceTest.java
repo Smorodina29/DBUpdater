@@ -2,6 +2,7 @@ package com.company;
 
 import com.company.check.*;
 import com.company.data.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by Александр on 17.07.2016.
  */
+@Ignore
 public class UtilServiceTest {
     @Test
     public void tablesForUpdate() throws Throwable {
@@ -32,21 +34,8 @@ public class UtilServiceTest {
     public void getColumnNamesForAdd() throws Exception {
         String tableName = "address";
         List<String> expected = Arrays.asList("address", "regionid");
-        List<String> actual = UpdateService.getTableColumns(tableName, false);
+        List<String> actual = UpdateService.getTableColumns(tableName);
         assertEquals(actual, expected);
-    }
-
-    @Test
-    public void getColumnNamesForUpdate() throws Exception {
-        String tableName = "address";
-        List<String> expected = Arrays.asList("id", "address", "regionid");
-        List<String> actual = UpdateService.getTableColumns(tableName, true);
-        assertEquals(actual, expected);
-    }
-
-    @Test
-    public void getTableStructure() throws Exception {
-
     }
 
     @Test

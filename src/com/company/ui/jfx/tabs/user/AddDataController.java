@@ -1,6 +1,7 @@
 package com.company.ui.jfx.tabs.user;
 
 import com.company.UpdateService;
+import com.company.Utils;
 import com.company.check.CheckException;
 import com.company.ui.jfx.tabs.TabController;
 import javafx.beans.value.ChangeListener;
@@ -31,7 +32,6 @@ public class AddDataController implements TabController {
     public TextArea resultsTextArea;
 
     public AddDataController() {
-
     }
 
     public void initialize() {
@@ -112,7 +112,7 @@ public class AddDataController implements TabController {
     public void load() {
         Set<String> tableNamesForUpdate = new HashSet<>();
         try {
-            tableNamesForUpdate = UpdateService.getTableNamesForUpdate();
+            tableNamesForUpdate = UpdateService.getTableNamesForAdd();
             System.out.println("Loaded tables for add:" + tableNamesForUpdate);
         } catch (Throwable e) {
             System.out.println("Failed to load table names for add:" + e.getMessage());
@@ -124,26 +124,32 @@ public class AddDataController implements TabController {
 
         if (!tableNamesForUpdate.isEmpty()) {
             tableNamesBox.setValue(tableNamesBox.getItems().get(0));
+        } else{
+            new Alert(Alert.AlertType.INFORMATION, "Список доступных для добавления таблиц пуст.", ButtonType.OK).show();
         }
     }
 
     public void exportTemplate(ActionEvent actionEvent) {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Сохранить шаблон как...");
+        if (Utils.isNotEmpty(tableNamesBox.getValue())){
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Сохранить шаблон как...");
 
-        chooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("xls", "*.xls"),
-                new FileChooser.ExtensionFilter("xlsx", "*.xlsx")
-        );
-        File file = chooser.showSaveDialog(root.getScene().getWindow());
+            chooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("xls", "*.xls"),
+                    new FileChooser.ExtensionFilter("xlsx", "*.xlsx")
+            );
+            File file = chooser.showSaveDialog(root.getScene().getWindow());
 
-        boolean hasSelectedFile = file != null;
-        if (hasSelectedFile) {
-            System.out.println("Save template to \'" + file + "\'");
-            UpdateService.exportTableToFile(tableNamesBox.getValue(), file.getAbsolutePath(), false);
+            boolean hasSelectedFile = file != null;
+            if (hasSelectedFile) {
+                System.out.println("Save template to \'" + file + "\'");
+                UpdateService.exportTableToFile(tableNamesBox.getValue(), file.getAbsolutePath(), true);
+            } else {
+                System.out.println("User cancelled selecting template save path.");
+            }
         } else {
-            System.out.println("User cancelled selecting template save path.");
+            System.out.println("No one table is selected. Cancel export.");
+            new Alert(Alert.AlertType.INFORMATION, "Не выбрана таблица для добавления.", ButtonType.OK).show();
         }
-
     }
 }
