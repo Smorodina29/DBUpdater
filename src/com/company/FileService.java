@@ -5,7 +5,8 @@ import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -167,7 +168,7 @@ public class FileService {
         return null;
     }
 
-    static KeyValue getCellValue(int key, HSSFCell cell, Column column, int x, int y) {
+    static KeyValue getCellValue(int key, Cell cell, Column column, int x, int y) {
         boolean isEmptyCell = cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK;
         if (isEmptyCell) {
             if (!column.isNullable) {
@@ -236,14 +237,14 @@ public class FileService {
         ArrayList<KeyValue> result = new ArrayList<KeyValue>();
 
         try {
-            HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(path));
-            HSSFSheet sheet = myExcelBook.getSheetAt(0);
+            Workbook myExcelBook = WorkbookFactory.create(new FileInputStream(path));
+            Sheet sheet = myExcelBook.getSheetAt(0);
 
             System.out.println("FirstRow=" + sheet.getFirstRowNum() + ", LastRow=" + sheet.getLastRowNum() + ", PhysicalNumber=" + sheet.getPhysicalNumberOfRows());
             int x = 0; //x - current column
             int idX = -1; //idX
             int res = -1; //res - target name of column
-            HSSFRow row = sheet.getRow(0);
+            Row row = sheet.getRow(0);
 
             int lastX = row.getLastCellNum(); //last column
             System.out.println("LastX=" + lastX);
@@ -251,7 +252,7 @@ public class FileService {
             //search for id and target column indexes
             for (; x < lastX; x++) {
                 System.out.println("x="+x);
-                HSSFCell cell = row.getCell(x);
+                Cell cell = row.getCell(x);
 
                 if (cell == null) throw new RuntimeException("Empty header at index " + x);
 
@@ -282,8 +283,8 @@ public class FileService {
                 row = sheet.getRow(y);
                 if (row == null) continue;//skip empty row
 
-                HSSFCell idCell = row.getCell(idX);
-                HSSFCell targetCell = row.getCell(res);
+                Cell idCell = row.getCell(idX);
+                Cell targetCell = row.getCell(res);
 
                 int cellType;
                 if (targetCell != null) {
@@ -304,7 +305,7 @@ public class FileService {
                 }
             }
 
-        } catch (IOException e) {
+        } catch (IOException | InvalidFormatException e) {
             e.printStackTrace();
         }
 

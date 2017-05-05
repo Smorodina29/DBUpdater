@@ -111,7 +111,7 @@ public class AddDataController implements TabController {
                             case WARNING:
                                 String wrn = "Предупреждение: проверка не пройдена: " + check.getName();
                                 resultsTextArea.appendText("\n" + wrn);
-                                new Alert(Alert.AlertType.WARNING, wrn, ButtonType.OK).show();
+//                                new Alert(Alert.AlertType.WARNING, wrn, ButtonType.OK).show();
                                 break;
                             default:
                                 throw new RuntimeException("Unknown check type:" + check.getType());

@@ -485,53 +485,6 @@ public class UpdateService {
         return null;
     }
 
-    public static int importAndUpdate(String path, String targetTableName, String targetColumnName) throws SQLException, CheckException {
-        List<Column> columns = filterForUpdate(getTableStructure(targetTableName), targetColumnName);
-
-        Column targetColumn = findColumn(targetColumnName, columns);
-        ArrayList<KeyValue> keyValues = FileService.readForUpdate(path, targetTableName, targetColumn);
-
-
-        ArrayList<Map<Column, KeyValue>> data = new ArrayList<>();
-
-        Column idColumn = findColumn("id", columns);
-        for (KeyValue keyValue : keyValues) {
-            HashMap<Column, KeyValue> map = new HashMap<>();
-            map.put(idColumn, new FloatKeyValue((float) keyValue.key));//todo refactor this ugly code
-            map.put(targetColumn, keyValue);
-            data.add(map);
-        }
-        String tempTableName = createTempTable(targetTableName, columns);
-        fillTable(tempTableName, data);
-
-        System.out.println("Start checking tables!");
-
-        List<Check> checks = ChecksService.getChecksForUpdate(targetTableName, targetColumnName);
-
-        if (checks == null || checks.isEmpty()) {
-            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
-        }
-        System.out.println("Found checks:" + checks);
-        int updateRowsCount = keyValues.size();
-        for (Check check : checks) {
-            boolean passed = checkForUpdate(targetTableName, targetColumnName, tempTableName, check, updateRowsCount);
-            if (!passed) {
-                switch (check.getType()) {
-                    case ERROR:
-                        throw new CheckException(check.getName());
-                    case WARNING:
-                        new Alert(Alert.AlertType.WARNING, "Предупреждение: проверка не пройдена: " + check.getName(), ButtonType.OK).show();
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown check type:" + check.getType());
-                }
-            } else {
-                System.out.println("Passed:" + check.getName());
-            }
-        }
-        return updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName);
-    }
-
     public static void disableUpdateFor(Set<String> disableUpdateSet) throws SQLException {
         if (disableUpdateSet == null || disableUpdateSet.isEmpty()) return;
         String queryString = "delete from pair_checks where for_update_id in (select id from for_update where tablename=?);\n" +
