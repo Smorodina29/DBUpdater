@@ -33,7 +33,7 @@
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
-                                        <Button fx:id="exportTemplateButton" disable="true" mnemonicParsing="false" text="Выгрузить шаблон" GridPane.columnIndex="1" GridPane.rowIndex="1" onAction="#exportTemplate" />
+                                        <Button fx:id="exportTemplateButton" disable="true" mnemonicParsing="false" onAction="#exportTemplate" text="Выгрузить шаблон" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                         <Button fx:id="uploadButton" disable="true" mnemonicParsing="false" onAction="#upload" text="Загрузить файл" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                         <Label text="1) Выберите таблицу для добавления:">
                                             <padding>
@@ -80,19 +80,8 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                             <children>
-                                                <Label text="Всего найдено: "/>
-                                                <Label fx:id="affectedRowsCountLabel" text="0">
-                                                    <padding>
-                                                        <Insets left="100.0"/>
-                                                    </padding>
-                                                </Label>
-                                                <Label text="записей.">
-                                                    <padding>
-                                                        <Insets left="110.0"/>
-                                                    </padding>
-                                                </Label>
-                                                <Button disable="true" mnemonicParsing="false" text="Завершить" GridPane.columnIndex="1" />
-                                                <Button alignment="BASELINE_RIGHT" disable="true" mnemonicParsing="false" text="Отменить" GridPane.columnIndex="2" />
+                                                <Button fx:id="finishAdding" disable="true" mnemonicParsing="false" onAction="#onFinishAdding" text="Завершить" GridPane.columnIndex="1" />
+                                                <Button fx:id="cancelAdding" alignment="BASELINE_RIGHT" mnemonicParsing="false" onAction="#onCancellAdding" text="Отменить" GridPane.columnIndex="2" />
                                             </children>
                                             <BorderPane.margin>
                                                 <Insets top="10.0" />

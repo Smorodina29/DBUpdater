@@ -1,8 +1,9 @@
 package com.company.ui.jfx.tabs.user;
 
-import com.company.UpdateService;
-import com.company.Utils;
+import com.company.*;
+import com.company.check.Check;
 import com.company.check.CheckException;
+import com.company.data.KeyValue;
 import com.company.ui.jfx.tabs.TabController;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -16,6 +17,7 @@ import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -28,8 +30,12 @@ public class AddDataController implements TabController {
     public ComboBox<String> tableNamesBox;
     public Button uploadButton;
     public Button exportTemplateButton;
-    public Label affectedRowsCountLabel;
     public TextArea resultsTextArea;
+    public Button finishAdding;
+    public Button cancelAdding;
+    private String tempTableName;
+    private String targetTableName;
+    private List<Column> columns;
 
     public AddDataController() {
     }
@@ -60,7 +66,7 @@ public class AddDataController implements TabController {
 
     public void upload(ActionEvent actionEvent) {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Сохранить шаблон как...");
+        chooser.setTitle("Выберите файл для импорта...");
 
         chooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("xls", "*.xls"),
@@ -73,36 +79,73 @@ public class AddDataController implements TabController {
             System.out.println("Import \'" + file + "\'");
 
             String path = file.getAbsolutePath();
-            String targetTableName = tableNamesBox.getValue();
-
+            clearImportDataAndUI();
+            targetTableName = tableNamesBox.getValue();
+            resultsPane.setExpanded(true);
             try {
-                int affected = UpdateService.importAndAdd(path, targetTableName);
-                affectedRowsCountLabel.setText("" + affected);
-                resultsTextArea.setText("Добавлено " + affected + " записей в таблицу " + targetTableName);
+//                int affected = UpdateService.importAndAdd(path, targetTableName);
+                resultsTextArea.setText("Начинаем добавление в таблицу \'" + targetTableName + "\'");
+                columns = UpdateService.filterForAdd(UpdateService.getTableStructure(targetTableName));
+                List<Map<Column, KeyValue>> data = FileService.readForAdd(path, targetTableName, columns);
+                resultsTextArea.appendText("\nНайдено записей в файле: " + data.size() + ".");
+                tempTableName = UpdateService.createTempTable(targetTableName, columns);
+                resultsTextArea.appendText("\nСоздана временная таблица " + tempTableName + ".");
+                UpdateService.fillTable(tempTableName, data);
+                resultsTextArea.appendText("\nНаполнили временную таблицу данными из файла.");
+
+                List<Check> checks = ChecksService.getChecksForAdd(targetTableName);
+                if (checks == null || checks.isEmpty()) {
+                    throw new RuntimeException("Проверки не найдены для таблицы `" + targetTableName + "\'");
+                }
+
+                resultsTextArea.appendText("\nНайдено проверок: " + checks.size());
+
+                for (Check check : checks) {
+                    boolean passed = UpdateService.checkForUpdate(targetTableName, null, tempTableName, check,data.size());
+                    if (!passed) {
+                        switch (check.getType()) {
+                            case ERROR:
+                                String query = check.getSqlQuery(tempTableName, targetTableName, null);
+                                throw new CheckException(check.getName() + "(validation=" + check.getValidationMethod() + ")" + "\n(" + query + ")");
+                            case WARNING:
+                                String wrn = "Предупреждение: проверка не пройдена: " + check.getName();
+                                resultsTextArea.appendText("\n" + wrn);
+                                new Alert(Alert.AlertType.WARNING, wrn, ButtonType.OK).show();
+                                break;
+                            default:
+                                throw new RuntimeException("Unknown check type:" + check.getType());
+                        }
+                    } else {
+                        resultsTextArea.appendText("\nПройдена: " + check.getName());
+                    }
+                }
+                resultsTextArea.appendText("\nВсе проверки пройдены.\n\nНажмите \'Завершить\' для переноса данных из временной таблицы в целевую");
+
+                finishAdding.setDisable(false);
             } catch (SQLException ex) {
                 System.out.println("Error: " + ex.getMessage());
                 ex.printStackTrace();
-                String msgPrefix = "Произошла ошибка во время выполнения запроса: " + ex.getMessage();
-                affectedRowsCountLabel.setText("0");
+                String msgPrefix = "\nПроизошла ошибка во время выполнения запроса: " + ex.getMessage();
                 StringWriter stackTraceWriter = new StringWriter();
                 ex.printStackTrace(new PrintWriter(stackTraceWriter));
-                resultsTextArea.setText(msgPrefix + "\n" + stackTraceWriter.toString());
+                resultsTextArea.appendText(msgPrefix + "\n" + stackTraceWriter.toString());
+                finishAdding.setDisable(true);
             } catch (CheckException e1) {
                 System.out.println("Error: " + e1.getMessage());
-                affectedRowsCountLabel.setText("0");
-                resultsTextArea.setText("Не удалось добавить записи в таблице. Не прошла проверка: " + e1.getMessage());
+                resultsTextArea.appendText("\nНе удалось добавить записи в таблице. Не прошла проверка: " + e1.getMessage());
                 e1.printStackTrace();
+                finishAdding.setDisable(true);
             } catch (Throwable ex) {
                 System.out.println("Error: " + ex.getMessage());
                 ex.printStackTrace();
-                String msgPrefix = "Произошла ошибка во время импорта данных: " + ex.getMessage();
-                affectedRowsCountLabel.setText("0");
+                String msgPrefix = "\nПроизошла ошибка во время импорта данных: " + ex.getMessage();
                 StringWriter stackTraceWriter = new StringWriter();
                 ex.printStackTrace(new PrintWriter(stackTraceWriter));
-                resultsTextArea.setText(msgPrefix + "\n" + stackTraceWriter.toString());
+                resultsTextArea.appendText(msgPrefix + "\n" + stackTraceWriter.toString());
+                finishAdding.setDisable(true);
             }
-            resultsPane.setExpanded(true);
 
+            resultsTextArea.setScrollTop(Double.MAX_VALUE);
         } else {
             System.out.println("User cancelled selecting file to upload.");
         }
@@ -143,13 +186,50 @@ public class AddDataController implements TabController {
             boolean hasSelectedFile = file != null;
             if (hasSelectedFile) {
                 System.out.println("Save template to \'" + file + "\'");
-                UpdateService.exportTableToFile(tableNamesBox.getValue(), file.getAbsolutePath(), true);
+                UpdateService.exportTableToFile(tableNamesBox.getValue(), file.getAbsolutePath(), false);
             } else {
                 System.out.println("User cancelled selecting template save path.");
             }
         } else {
             System.out.println("No one table is selected. Cancel export.");
             new Alert(Alert.AlertType.INFORMATION, "Не выбрана таблица для добавления.", ButtonType.OK).show();
+        }
+    }
+
+    public void onCancellAdding(ActionEvent event) {
+        clearImportDataAndUI();
+        try {
+            UpdateService.deleteTable(tempTableName);
+            System.out.println("Removed temp table \'" + tempTableName + "\'.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to remove temp table \'" + tempTableName + "\'.");
+            new Alert(Alert.AlertType.WARNING, "Не удалось удалить временную таблицу.", ButtonType.OK).show();
+        }
+    }
+
+    private void clearImportDataAndUI() {
+        finishAdding.setDisable(true);
+        resultsTextArea.clear();
+        targetTableName = null;
+        tempTableName = null;
+        columns = null;
+    }
+
+    public void onFinishAdding(ActionEvent event) {
+        finishAdding.setDisable(true);
+        try {
+            int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
+            resultsTextArea.appendText("\nУспешно добавлено " + affected + " записей в таблицу." + tempTableName);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Произошла ошибка при переносе данных. Ошибка:" + e.getMessage(), ButtonType.OK).show();
+        }
+        try {
+            UpdateService.deleteTable(tempTableName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Не удалось удалить временную таблицу.", ButtonType.OK).show();
         }
     }
 }

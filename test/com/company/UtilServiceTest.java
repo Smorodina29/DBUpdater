@@ -1,6 +1,5 @@
 package com.company;
 
-import com.company.check.*;
 import com.company.data.*;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,13 +33,13 @@ public class UtilServiceTest {
     public void getColumnNamesForAdd() throws Exception {
         String tableName = "address";
         List<String> expected = Arrays.asList("address", "regionid");
-        List<String> actual = UpdateService.getTableColumns(tableName);
+        List<String> actual = UpdateService.getUpdatableTableColumns(tableName);
         assertEquals(actual, expected);
     }
 
     @Test
     public void exportTableToFile() {
-        String tableName = "address";
+        String tableName = "dbUsers";
         String path = "C:\\tmp\\1.xls";
         UpdateService.exportTableToFile(tableName, path, true);
     }

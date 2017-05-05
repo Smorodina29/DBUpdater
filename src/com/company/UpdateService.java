@@ -52,7 +52,7 @@ public class UpdateService {
         return tablesForUpdate;
     }
 
-    public static List<String> getTableColumns(String tableName) {
+    public static List<String> getUpdatableTableColumns(String tableName) {
         ArrayList<String> columnNames = new ArrayList<String>();
 
         Statement statement = null;
@@ -174,13 +174,13 @@ public class UpdateService {
     }
 
 
-    public static void exportTableToFile(String tableName, String path, boolean forAdd) {
-        List<String> columnNames = getTableColumns(tableName);
-        if (forAdd) {
+    public static void exportTableToFile(String tableName, String path, boolean forUpdate) {
+        List<String> columnNames = getUpdatableTableColumns(tableName);
+        if (forUpdate) {
             columnNames.add(0, "ID");
         }
 
-        System.out.println("Columns for export: \'" + tableName + "\':" + columnNames + ". For_update:" + forAdd);
+        System.out.println("Columns for export: \'" + tableName + "\':" + columnNames + ". For updating:" + forUpdate);
         HSSFWorkbook book = new HSSFWorkbook();
         HSSFRow row = book.createSheet(tableName).createRow(0);
         for (int i = 0; i < columnNames.size(); i++) {
@@ -300,6 +300,7 @@ public class UpdateService {
             ResultSet rs = statement.executeQuery(query);
             rs.next();
             int count =  rs.getInt(1);
+            System.out.println("Validation " + check.getValidationMethod() + ", count=" + count + ", number of rows  = " + numberOfRows);
             result = check.validate(count, numberOfRows);
         } catch (SQLException e) {
             System.out.println("Error:" + e);
@@ -384,7 +385,7 @@ public class UpdateService {
         }
     }
 
-    public static int addDataFromTempTable(String tableName, String tempTableName, List<Column> structure) {
+    public static int addDataFromTempTable(String tableName, String tempTableName, List<Column> structure) throws Throwable {
         Statement statement = null;
         int affected = -1;
         try {
@@ -393,8 +394,6 @@ public class UpdateService {
             System.out.println("Generated SQL for coping data: " + query);
             affected = statement.executeUpdate(query);
             System.out.println("Copied " + affected + " row(s).");
-        } catch (SQLException e) {
-            System.out.println("Error:" + e);
         } finally {
             Utils.closeQuietly(statement);
         }
@@ -484,38 +483,6 @@ public class UpdateService {
             }
         }
         return null;
-    }
-
-    public static int importAndAdd(String path, String targetTableName) throws SQLException, CheckException {
-        List<Column> columns = filterForAdd(getTableStructure(targetTableName));
-        List<Map<Column, KeyValue>> data = FileService.readForAdd(path, targetTableName, columns);
-        String tempTableName = createTempTable(targetTableName, columns);
-        fillTable(tempTableName, data);
-
-        List<Check> checks = ChecksService.getChecksForAdd(targetTableName);
-        if (checks == null || checks.isEmpty()) {
-            throw new RuntimeException("Checks are not found for `" + targetTableName + "\'");
-        }
-        System.out.println("Found checks:" + checks);
-
-        for (Check check : checks) {
-            boolean passed = checkForUpdate(targetTableName, null, tempTableName, check,data.size());
-            if (!passed) {
-                switch (check.getType()) {
-                    case ERROR:
-                        throw new CheckException(check.getName());
-                    case WARNING:
-                        new Alert(Alert.AlertType.WARNING, "Предупреждение: проверка не пройдена: " + check.getName(), ButtonType.OK).show();
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown check type:" + check.getType());
-                }
-            } else {
-                System.out.println("Passed:" + check.getName());
-            }
-        }
-
-        return addDataFromTempTable(targetTableName, tempTableName, columns);
     }
 
     public static int importAndUpdate(String path, String targetTableName, String targetColumnName) throws SQLException, CheckException {
@@ -761,7 +728,22 @@ public class UpdateService {
     }
 
 
-
+    public static void deleteTable(String tempTableName) throws SQLException {
+        if (Utils.isEmpty(tempTableName)) {
+            return;
+        }
+        Connection connection = null;
+        Statement cs = null;
+        String queryString = "IF EXISTS(select 1 from INFORMATION_SCHEMA.TABLES where TABLE_NAME='" + tempTableName + " ') drop table " + tempTableName;
+        try {
+            connection = ConnectionProvider.get().getConnection();
+            cs = connection.createStatement();
+            cs.executeUpdate(queryString);
+        } finally {
+            Utils.closeQuietly(cs);
+            Utils.closeQuietly(connection);
+        }
+    }
 }
 
 

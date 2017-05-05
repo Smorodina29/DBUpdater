@@ -55,7 +55,7 @@ public class UpdateDataController implements TabController {
                 uploadButton.setDisable(!hasSelectedTable);
 
                 if (hasSelectedTable) {
-                    List<String> columnNames = UpdateService.getTableColumns(selectedTable);
+                    List<String> columnNames = UpdateService.getUpdatableTableColumns(selectedTable);
                     System.out.println("Table " + selectedTable + " has columns for update: " + columnNames);
                     columnNamesBox.getItems().clear();
 
@@ -116,7 +116,7 @@ public class UpdateDataController implements TabController {
         boolean hasSelectedFile = file != null;
         if (hasSelectedFile) {
             System.out.println("Save template to \'" + file + "\'");
-            UpdateService.exportTableToFile(tableNamesBox.getValue(), file.getAbsolutePath(), false);
+            UpdateService.exportTableToFile(tableNamesBox.getValue(), file.getAbsolutePath(), true);
         } else {
             System.out.println("User cancelled selecting template save path.");
         }
