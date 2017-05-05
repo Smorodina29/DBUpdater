@@ -80,8 +80,8 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                             <children>
-                                                <Button fx:id="finishAdding" disable="true" mnemonicParsing="false" onAction="#onFinishAdding" text="Завершить" GridPane.columnIndex="1" />
-                                                <Button fx:id="cancelAdding" alignment="BASELINE_RIGHT" mnemonicParsing="false" onAction="#onCancellAdding" text="Отменить" GridPane.columnIndex="2" />
+                                                <Button fx:id="finishImportButton" disable="true" mnemonicParsing="false" onAction="#onFinish" text="Завершить" GridPane.columnIndex="1" />
+                                                <Button fx:id="cancelAdding" alignment="BASELINE_RIGHT" mnemonicParsing="false" onAction="#onCancel" text="Отменить" GridPane.columnIndex="2" />
                                             </children>
                                             <BorderPane.margin>
                                                 <Insets top="10.0" />

@@ -310,7 +310,7 @@ public class UpdateService {
         return result;
     }
 
-    public static int updateDataFromTempToTarget(String targetTableName, String targetColumnName, String tempTableName, String tempColumnName) {
+    public static int updateDataFromTempToTarget(String targetTableName, String targetColumnName, String tempTableName) {
         int result = 0;
         Statement statement = null;
         try {
@@ -529,7 +529,7 @@ public class UpdateService {
                 System.out.println("Passed:" + check.getName());
             }
         }
-        return updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName, targetColumnName);
+        return updateDataFromTempToTarget(targetTableName, targetColumnName, tempTableName);
     }
 
     public static void disableUpdateFor(Set<String> disableUpdateSet) throws SQLException {

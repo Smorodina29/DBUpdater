@@ -106,22 +106,11 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                                             </rowConstraints>
                                             <children>
-                                                <Label text="Всего найдено: "/>
-                                                <Label fx:id="affectedRowsCountLabel" text="0">
-                                                    <padding>
-                                                        <Insets left="100.0"/>
-                                                    </padding>
-                                                </Label>
-                                                <Label text="записей.">
-                                                    <padding>
-                                                        <Insets left="110.0"/>
-                                                    </padding>
-                                                </Label>
-                                                <Button alignment="BASELINE_RIGHT" disable="true"
-                                                        mnemonicParsing="false" text="Отменить"
-                                                        GridPane.columnIndex="2"/>
-                                                <Button disable="true" mnemonicParsing="false" text="Завершить"
+                                                <Button fx:id="finishImportButton" onAction="#onFinish" alignment="BASELINE_RIGHT" disable="true"
+                                                        mnemonicParsing="false" text="Завершить"
                                                         GridPane.columnIndex="1"/>
+                                                <Button fx:id="cancelAdding" onAction="#onCancel" mnemonicParsing="false" text="Отменить"
+                                                        GridPane.columnIndex="2"/>
                                             </children>
                                             <BorderPane.margin>
                                                 <Insets top="10.0"/>

@@ -5,6 +5,7 @@ import com.company.check.Check;
 import com.company.check.CheckException;
 import com.company.data.KeyValue;
 import com.company.ui.jfx.tabs.TabController;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -31,7 +32,7 @@ public class AddDataController implements TabController {
     public Button uploadButton;
     public Button exportTemplateButton;
     public TextArea resultsTextArea;
-    public Button finishAdding;
+    public Button finishImportButton;
     public Button cancelAdding;
     private String tempTableName;
     private String targetTableName;
@@ -121,7 +122,7 @@ public class AddDataController implements TabController {
                 }
                 resultsTextArea.appendText("\nВсе проверки пройдены.\n\nНажмите \'Завершить\' для переноса данных из временной таблицы в целевую");
 
-                finishAdding.setDisable(false);
+                finishImportButton.setDisable(false);
             } catch (SQLException ex) {
                 System.out.println("Error: " + ex.getMessage());
                 ex.printStackTrace();
@@ -129,12 +130,12 @@ public class AddDataController implements TabController {
                 StringWriter stackTraceWriter = new StringWriter();
                 ex.printStackTrace(new PrintWriter(stackTraceWriter));
                 resultsTextArea.appendText(msgPrefix + "\n" + stackTraceWriter.toString());
-                finishAdding.setDisable(true);
+                finishImportButton.setDisable(true);
             } catch (CheckException e1) {
                 System.out.println("Error: " + e1.getMessage());
                 resultsTextArea.appendText("\nНе удалось добавить записи в таблице. Не прошла проверка: " + e1.getMessage());
                 e1.printStackTrace();
-                finishAdding.setDisable(true);
+                finishImportButton.setDisable(true);
             } catch (Throwable ex) {
                 System.out.println("Error: " + ex.getMessage());
                 ex.printStackTrace();
@@ -142,10 +143,16 @@ public class AddDataController implements TabController {
                 StringWriter stackTraceWriter = new StringWriter();
                 ex.printStackTrace(new PrintWriter(stackTraceWriter));
                 resultsTextArea.appendText(msgPrefix + "\n" + stackTraceWriter.toString());
-                finishAdding.setDisable(true);
+                finishImportButton.setDisable(true);
             }
 
-            resultsTextArea.setScrollTop(Double.MAX_VALUE);
+            //scroll bottom
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    resultsTextArea.setScrollTop(Double.MAX_VALUE);
+                }
+            });
         } else {
             System.out.println("User cancelled selecting file to upload.");
         }
@@ -162,7 +169,7 @@ public class AddDataController implements TabController {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Нe удалось получить список доступных на добавление таблиц. Ошибка: " + e.getMessage(), ButtonType.OK).show();
         }
-
+        tableNamesBox.getItems().clear();
         tableNamesBox.getItems().addAll(tableNamesForUpdate);
 
         if (!tableNamesForUpdate.isEmpty()) {
@@ -196,7 +203,7 @@ public class AddDataController implements TabController {
         }
     }
 
-    public void onCancellAdding(ActionEvent event) {
+    public void onCancel(ActionEvent event) {
         clearImportDataAndUI();
         try {
             UpdateService.deleteTable(tempTableName);
@@ -209,15 +216,15 @@ public class AddDataController implements TabController {
     }
 
     private void clearImportDataAndUI() {
-        finishAdding.setDisable(true);
+        finishImportButton.setDisable(true);
         resultsTextArea.clear();
         targetTableName = null;
         tempTableName = null;
         columns = null;
     }
 
-    public void onFinishAdding(ActionEvent event) {
-        finishAdding.setDisable(true);
+    public void onFinish(ActionEvent event) {
+        finishImportButton.setDisable(true);
         try {
             int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
             resultsTextArea.appendText("\nУспешно добавлено " + affected + " записей в таблицу." + tempTableName);
