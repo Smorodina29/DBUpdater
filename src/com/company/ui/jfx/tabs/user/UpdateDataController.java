@@ -253,7 +253,6 @@ public class UpdateDataController implements TabController {
         clearImportDataAndUI();
         try {
             UpdateService.deleteTable(tempTableName);
-            System.out.println("Removed temp table \'" + tempTableName + "\'.");
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Failed to remove temp table \'" + tempTableName + "\'.");
@@ -271,5 +270,13 @@ public class UpdateDataController implements TabController {
             message = "\nНи одна запись не была обновлена в таблице " + targetTableName + ".";
         }
         resultsTextArea.appendText(message);
+
+        try {
+            UpdateService.deleteTable(tempTableName);
+        } catch (SQLException e) {
+            System.out.println("Failed to remove temp table \'" + tempTableName + "\'.");
+            e.printStackTrace();
+            new Alert(Alert.AlertType.WARNING, "Не удалось удалить временную таблицу.", ButtonType.OK).show();
+        }
     }
 }

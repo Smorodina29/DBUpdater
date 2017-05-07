@@ -692,6 +692,7 @@ public class UpdateService {
             connection = ConnectionProvider.get().getConnection();
             cs = connection.createStatement();
             cs.executeUpdate(queryString);
+            System.out.println("Removed temp table \'" + tempTableName + "\'.");
         } finally {
             Utils.closeQuietly(cs);
             Utils.closeQuietly(connection);
