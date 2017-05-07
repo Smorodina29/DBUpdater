@@ -226,7 +226,7 @@ public class AddDataController implements TabController {
         finishImportButton.setDisable(true);
         try {
             int affected = UpdateService.addDataFromTempTable(targetTableName, tempTableName, columns);
-            resultsTextArea.appendText("\nУспешно добавлено " + affected + " записей в таблицу." + tempTableName);
+            resultsTextArea.appendText("\nУспешно добавлено " + affected + " записей в таблицу \'" + targetTableName + "\'");
         } catch (Throwable e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Произошла ошибка при переносе данных. Ошибка:" + e.getMessage(), ButtonType.OK).show();
