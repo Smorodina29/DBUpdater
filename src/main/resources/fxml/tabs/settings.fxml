@@ -58,7 +58,7 @@
                                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                             </HBox.margin>
                         </Label>
-                        <PasswordField fx:id="dbUserPwdField" prefWidth="300.0">
+                        <PasswordField fx:id="dbUserPwdField" prefWidth="400.0">
                             <HBox.margin>
                                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                             </HBox.margin>

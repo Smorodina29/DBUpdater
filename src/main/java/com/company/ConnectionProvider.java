@@ -60,6 +60,7 @@ public class ConnectionProvider {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             connection = DriverManager.getConnection(appConfig.getDbConnectString(), appConfig.getDbUserid(), appConfig.getDbPassword());
         } catch (ClassNotFoundException | SQLException e) {
+            System.out.println("Failed to get connection:" + e.getMessage());
             e.printStackTrace();
         }
 

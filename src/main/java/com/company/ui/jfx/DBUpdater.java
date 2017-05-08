@@ -22,7 +22,7 @@ public class DBUpdater extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource("dbupdater.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getClassLoader().getResource("fxml/dbupdater.fxml"));
         Parent root = fxmlLoader.load();
         primaryStage.setTitle("Утилита импорта данных");
         primaryStage.setScene(new Scene(root, 800, 500));

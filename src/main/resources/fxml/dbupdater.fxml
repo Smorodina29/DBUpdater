@@ -12,22 +12,22 @@
                 <TabPane fx:id="tabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
                     <tabs>
                         <Tab text="Добавление" fx:id="addTab">
-                            <fx:include fx:id="addData" source="tabs/user/addData.fxml"/>
+                            <fx:include fx:id="addData" source="/fxml/tabs/addData.fxml"/>
                         </Tab>
                         <Tab text="Обновление" fx:id="updateTab">
-                            <fx:include fx:id="updateData" source="tabs/user/updateData.fxml"/>
+                            <fx:include fx:id="updateData" source="tabs/updateData.fxml"/>
                         </Tab>
                         <Tab text="Проверки" fx:id="checksTab">
-                            <fx:include fx:id="checks" source="tabs/admin/checks.fxml"/>
+                            <fx:include fx:id="checks" source="tabs/checks.fxml"/>
                         </Tab>
                         <Tab text="Таблицы" fx:id="tablesTab">
-                            <fx:include fx:id="tables" source="tabs/admin/tables.fxml"/>
+                            <fx:include fx:id="tables" source="tabs/tables.fxml"/>
                         </Tab>
                         <Tab text="Списки" fx:id="tableSettingsTab">
-                            <fx:include fx:id="tableSettings" source="tabs/admin/tableSettings.fxml"/>
+                            <fx:include fx:id="tableSettings" source="tabs/tableSettings.fxml"/>
                         </Tab>
                         <Tab text="Настройки" fx:id="settingsTab">
-                            <fx:include fx:id="settings" source="tabs/admin/settings.fxml"/>
+                            <fx:include fx:id="settings" source="tabs/settings.fxml"/>
                         </Tab>
                     </tabs>
                 </TabPane>

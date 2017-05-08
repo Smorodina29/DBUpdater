@@ -16,39 +16,37 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by Александр on 01.05.2017.
+ * Created by Александр on 09.04.2017.
  */
-public class SelectCheckDialog extends Dialog<Check>{
+public class CreateCheckDialog extends Dialog<Check> {
 
-    public void open(Window parentWindow, List<Check> checks, EditCallback<Check> selectCallback) {
-        setTitle("Выбор проверки.");
-        FXMLLoader loader = new FXMLLoader(this.getClass().getResource("selectCheck.fxml"));
+    public void open(Window parentWindow, EditCallback<Check> editCallback) {
+        setTitle("Добавление проверки.");
+        FXMLLoader loader = new FXMLLoader(this.getClass().getClassLoader().getResource("fxml/editors/createCheck.fxml"));
         try {
             Parent root = loader.load();
-            Scene scene = new Scene(root, 800, 400);
+            Scene scene = new Scene(root, 500, 400);
             Stage stage = new Stage();
             stage.initOwner(parentWindow);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initStyle(StageStyle.UNDECORATED);
             stage.setScene(scene);
-            SelectCheckDialogController controller = loader.<SelectCheckDialogController>getController();
+            CreateCheckDialogController controller = loader.<CreateCheckDialogController>getController();
             getDialogPane().setContent(root);
 
-            ButtonType saveButtonType = new ButtonType("Выбрать", ButtonBar.ButtonData.OK_DONE);
+            ButtonType saveButtonType = new ButtonType("Добавить", ButtonBar.ButtonData.OK_DONE);
             getDialogPane().getButtonTypes().addAll(saveButtonType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
             Node saveButton = getDialogPane().lookupButton(saveButtonType);
             saveButton.setDisable(true);
-            controller.setChecks(checks);
 
-            controller.addSelectionChangeHandler(new SelectCheckDialogController.SelectionChangeHandler() {
+            controller.addChangeHandler(new CreateCheckDialogController.ChangeHandler() {
                 @Override
-                public void onSelectionChange(Check check) {
-                    saveButton.setDisable(check == null);
+                public void onChange(boolean isAllFilled) {
+                    saveButton.setDisable(!isAllFilled);
                 }
             });
 
@@ -65,9 +63,9 @@ public class SelectCheckDialog extends Dialog<Check>{
 
             Optional<Check> edited = showAndWait();
             if (edited.isPresent()) {
-                selectCallback.onFinish(edited.get());
+                editCallback.onFinish(edited.get());
             } else {
-                selectCallback.onCancel();
+                editCallback.onCancel();
             }
         } catch (IOException e) {
             e.printStackTrace();

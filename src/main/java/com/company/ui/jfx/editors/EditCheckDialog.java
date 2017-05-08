@@ -1,7 +1,6 @@
-package com.company.ui.jfx.editors.adding;
+package com.company.ui.jfx.editors;
 
 import com.company.check.Check;
-import com.company.ui.jfx.editors.EditCallback;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -21,11 +20,11 @@ import java.util.Optional;
 /**
  * Created by Александр on 09.04.2017.
  */
-public class CreateCheckDialog extends Dialog<Check> {
+public class EditCheckDialog extends Dialog<Check> {
 
-    public void open(Window parentWindow, EditCallback<Check> editCallback) {
-        setTitle("Добавление проверки.");
-        FXMLLoader loader = new FXMLLoader(this.getClass().getResource("createCheck.fxml"));
+    public void open(Check item, Window parentWindow, EditCallback<Check> editCallback) {
+        setTitle("Редактирование проверки.");
+        FXMLLoader loader = new FXMLLoader(this.getClass().getClassLoader().getResource("fxml/editors/editCheck.fxml"));
         try {
             Parent root = loader.load();
             Scene scene = new Scene(root, 500, 400);
@@ -34,19 +33,21 @@ public class CreateCheckDialog extends Dialog<Check> {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initStyle(StageStyle.UNDECORATED);
             stage.setScene(scene);
-            CreateCheckDialogController controller = loader.<CreateCheckDialogController>getController();
+            EditCheckDialogController controller = loader.<EditCheckDialogController>getController();
             getDialogPane().setContent(root);
 
-            ButtonType saveButtonType = new ButtonType("Добавить", ButtonBar.ButtonData.OK_DONE);
+            controller.edit(item);
+
+            ButtonType saveButtonType = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
             getDialogPane().getButtonTypes().addAll(saveButtonType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
             Node saveButton = getDialogPane().lookupButton(saveButtonType);
             saveButton.setDisable(true);
 
-            controller.addChangeHandler(new CreateCheckDialogController.ChangeHandler() {
+            controller.addChangeHandler(new EditCheckDialogController.ChangeHandler() {
                 @Override
-                public void onChange(boolean isAllFilled) {
-                    saveButton.setDisable(!isAllFilled);
+                public void onChange(boolean isNewValueEmpty) {
+                    saveButton.setDisable(isNewValueEmpty);
                 }
             });
 
@@ -60,7 +61,6 @@ public class CreateCheckDialog extends Dialog<Check> {
                     }
                 }
             });
-
             Optional<Check> edited = showAndWait();
             if (edited.isPresent()) {
                 editCallback.onFinish(edited.get());
