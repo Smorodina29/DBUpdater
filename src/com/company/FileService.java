@@ -235,6 +235,7 @@ public class FileService {
 
     public static ArrayList<KeyValue> readForUpdate(String path, String tableName, Column targetColumn) {
         ArrayList<KeyValue> result = new ArrayList<KeyValue>();
+        System.out.println("Start reading file: \'" + path + "\'");
 
         try {
             Workbook myExcelBook = WorkbookFactory.create(new FileInputStream(path));
