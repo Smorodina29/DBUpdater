@@ -302,6 +302,7 @@ public class TableSettingsController implements TabController, Initializable {
         tablesBox.getItems().addAll(tableModels);
         columnsView.getItems().clear();
         checksView.getItems().clear();
+        availableChecks = null;
 
         if (tableModels.size() > 0) {
             tablesBox.valueProperty().setValue(tablesBox.getItems().get(0));
