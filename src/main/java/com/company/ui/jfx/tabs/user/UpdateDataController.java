@@ -250,7 +250,6 @@ public class UpdateDataController implements TabController {
     }
 
     public void onCancel(ActionEvent event) {
-        clearImportDataAndUI();
         try {
             UpdateService.deleteTable(tempTableName);
         } catch (SQLException e) {
@@ -258,6 +257,7 @@ public class UpdateDataController implements TabController {
             System.out.println("Failed to remove temp table \'" + tempTableName + "\'.");
             new Alert(Alert.AlertType.WARNING, "Не удалось удалить временную таблицу.", ButtonType.OK).show();
         }
+        clearImportDataAndUI();
     }
 
     public void onFinish(ActionEvent event) {
